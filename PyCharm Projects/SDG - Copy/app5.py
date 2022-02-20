@@ -73,7 +73,8 @@ app.layout = html.Div(
                     className="header-description",
                 ),
                 html.Div(
-                    style={'margin-left': '222.5px'},
+                    className="center",
+                    #style={'margin-left': '222.5px'},
                     # 'margin-top': '90px',
                     # 'verticalAlign': 'middle'},
                     children=[
@@ -258,26 +259,28 @@ app.layout = html.Div(
             children=[
                 html.Div(
                     children=[
-                        html.Div(children="Select Order", className="menu-title"),
+                        html.Div(children="Select Order", className="menu-radio"),
                         dcc.RadioItems(id="slct_order",
                                        options=[
                                            {"label": "Ascending", "value": 'Ascending'},
                                            {"label": "Descending", "value": 'Descending'}
                                        ],
                                        value='Ascending',
+                                       className="radio",
                                        )
                     ],
                 ),
 
                 html.Div(
                     children=[
-                        html.Div(children="Date Range", className="menu-title"),
+                        html.Div(children="Date Range", className="menu-date"),
                         dcc.DatePickerRange(
                             id="date-range",
                             min_date_allowed=df.Date.min().date(),
                             max_date_allowed=df.Date.max().date(),
                             start_date=df.Date.min().date(),
                             end_date=df.Date.max().date(),
+                            className="date",
                         ),
                     ]
                 ),
