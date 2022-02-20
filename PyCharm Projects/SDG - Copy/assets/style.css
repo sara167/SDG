@@ -75,5 +75,62 @@ body {
     color: #079A82;
 }
 
+.center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  height: 95px;
+}
+.button {
+  background-color: #FFFFFF;
+  margin-top: 60px;
+  font-weight: bold;
+  font-family: "Lato", sans-serif;
+  color: #079A82;
+  padding: 9px 139px;
+  text-align: center;
+  text-decoration: center;
+  font-size: 13.5px;
+  transition-duration: 0.2s;
+  justify-content: center;
+  verticalAlign: center;
+  display: center;
+  justify-content: center;
+  margin: center;
+
+}
+.button:hover {
+  background-color: #CFCFCF;
+  color: white;
+  box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);
+
+}
+.menu-radio {
+    margin-bottom: 6px;
+    margin-left: 30px;
+    font-weight: bold;
+    color: #079A82;
+}
+.radio{
+    margin-bottom: 6px;
+    margin-left: 50px;
+
+}
+
+
+.menu-date {
+    margin-bottom: 6px;
+    margin-left: 70px;
+    font-weight: bold;
+    color: #079A82;
+}
+
+.date {
+    margin-bottom: 6px;
+    margin-left: 70px;
+}
+
+
 
 
