@@ -112,7 +112,10 @@ app.layout = html.Div(
                 ),
                 html.Div(
                     children=[
-                        html.Div(children="Specify Location", className="menu-title", id='location-subtitle'),
+                        html.Div(children="Specify Location", className="menu-title", id='location-subtitle', style={
+                        'height': '5px',
+                        'display': 'inline-block',
+                    }),
                         dcc.Dropdown(id="slct_specificlocation", options=[],
                                      multi=True,
                                      value='',
