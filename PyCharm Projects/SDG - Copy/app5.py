@@ -501,14 +501,15 @@ def set_find_options(display_bar, display_map, display_all):
      Input(component_id="display_bar", component_property="n_clicks"),
 
      ],
-    [State("slct_find", "options")]
+    [State("slct_find", "options"),
+    State("slct_aggregation", "options")]
 
 )
 def update_graph(slct_location, slct_location_options, slct_find, slct_specificlocation, slct_sorting, slct_order,
                  slct_nvalue,
                  slct_aggregation,
                  slct_specificfind, slct_specificfind_nominal, start_date, end_date, map_style,
-                 display_all, display_map, display_bar, options):
+                 display_all, display_map, display_bar, options, aggoptions):
     mask = ((df.Date >= start_date)
             & (df.Date <= end_date))
     filtered_data = df.loc[mask, :]
@@ -540,19 +541,21 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
         tail = 'Bottom'
     TestFinal = ['', '', '', '']
     i = 0
+
     if not slct_specificlocation:  ##no specific location
         if not slct_sorting:  # no sorting, by default ascending
             if yAxisNum == 1:
                 if slct_location == 'country' and slct_find == 'MPI':
-                    TestFinal[i] = df_mpi.groupby(slct_location).aggregate('mean')[slct_find]
+                    TestFinal[0] = df_mpi.groupby(slct_location).aggregate('mean')[slct_find].sort_values(
+                        ascending=ascending)
                 else:
                     TestFinal[0] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find].sort_values(
                         ascending=ascending)
             else:
                 while i < yAxisNum:
                     if slct_location == 'country' and slct_find[i] == 'MPI':
-                        TestFinal[i] = df_mpi.groupby(slct_location).aggregate('mean')[slct_find[i]]
-                        print(TestFinal[i])
+                        TestFinal[i] = df_mpi.groupby(slct_location).aggregate('mean')[slct_find[i]].sort_values(
+                            ascending=ascending)
                     else:
                         TestFinal[i] = Test.groupby(slct_location).aggregate(slct_aggregation)[
                             slct_find[i]].sort_values(
@@ -562,14 +565,16 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
         elif head in slct_sorting:  # Top
             if yAxisNum == 1:
                 if slct_location == 'country' and slct_find == 'MPI':
-                    TestFinal[i] = df_mpi.groupby(slct_location).aggregate('mean')[slct_find]
+                    TestFinal[0] = df_mpi.groupby(slct_location).aggregate('mean')[slct_find].sort_values(
+                            ascending=ascending)
                 else:
                     TestFinal[0] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find].sort_values(
-                        ascending=ascending).head(slct_nvalue)
+                        ascending=ascending)
             else:
                 while i < yAxisNum:
                     if slct_location == 'country' and slct_find[i] == 'MPI':
-                        TestFinal[i] = df_mpi.groupby(slct_location).aggregate('mean')[slct_find[i]]
+                        TestFinal[i] = df_mpi.groupby(slct_location).aggregate('mean')[slct_find[i]].sort_values(
+                            ascending=ascending)
                     else:
                         TestFinal[i] = Test.groupby(slct_location).aggregate(slct_aggregation)[
                             slct_find[i]].sort_values(
@@ -579,14 +584,16 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
         elif tail in slct_sorting:  # Bottom
             if yAxisNum == 1:
                 if slct_location == 'country' and slct_find == 'MPI':
-                    TestFinal[i] = df_mpi.groupby(slct_location).aggregate('mean')[slct_find]
+                    TestFinal[i] = df_mpi.groupby(slct_location).aggregate('mean')[slct_find].sort_values(
+                            ascending=ascending)
                 else:
                     TestFinal[0] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find].sort_values(
                         ascending=ascending).tail(slct_nvalue)
             else:
                 while i < yAxisNum:
                     if slct_location == 'country' and slct_find[i] == 'MPI':
-                        TestFinal[i] = df_mpi.groupby(slct_location).aggregate('mean')[slct_find[i]]
+                        TestFinal[i] = df_mpi.groupby(slct_location).aggregate('mean')[slct_find[i]].sort_values(
+                            ascending=ascending)
                     else:
                         TestFinal[i] = Test.groupby(slct_location).aggregate(slct_aggregation)[
                             slct_find[i]].sort_values(
@@ -610,8 +617,28 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
                 i = i + 1
 
     the_label = ['Not shown']
+    aggoptions = [{"label": "Total", "value": 'sum'},
+                  {"label": "Count", "value": 'count'},
+                  {"label": "Average", "value": 'mean'}]
+
     if yAxisNum == 1:
-        the_label = [x['label'] for x in options if x['value'] == slct_find]
+
+        #the_label = [x['label'] for x in options if x['value'] == slct_find]
+
+        for x in aggoptions:
+
+            if x['value'] == slct_aggregation and slct_find == 'MPI' :
+                the_label1 = 'Average'
+            elif x['value'] == slct_aggregation:
+                the_label1 = x['label']
+
+
+        for x in options:
+            if x['value'] == slct_find:
+                the_label2 = x['label']
+
+
+        the_label[0] = the_label1 +' '+ the_label2
 
     if yAxisNum > 1:
         the_label = ['', '', '', '']
@@ -621,6 +648,14 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
                 if x['value'] == i:
                     the_label[counter] = x['label']
                     counter = counter + 1
+
+        # if the_label[0] == 'MPI':
+        #     the_label[0] == 'Average MPI'
+        #
+        # elif the_label[1] == 'MPI':
+        #     the_label[1] == 'Average MPI'
+
+
 
     data = [dict(
         type='choropleth',
