@@ -291,7 +291,6 @@ app.layout = html.Div(
 # First options for all, map, bar
 @app.callback(
     [Output('slct_location', 'options'),
-     Output('slct_find', 'options'),
      Output('slct_find', 'value'),
      Output('slct_location', 'value'),
      Output('slct_specificlocation', 'value'),
@@ -305,9 +304,9 @@ def set_xy_options(display_bar, display_map, display_all):
     barOptions = [allOptions[0], allOptions[1], allOptions[7], allOptions[8], allOptions[9], allOptions[10],
                   allOptions[11]]
     if 'display_bar' in changed_id:
-        return barOptions, allOptions[2:7], 'loan_amount', 'country', '', ''
+        return barOptions, 'loan_amount', 'country', '', ''
     else:
-        return [allOptions[0], allOptions[1]], allOptions[2:7], 'loan_amount', 'country', '', ''
+        return [allOptions[0], allOptions[1]], 'loan_amount', 'country', '', ''
 
 
 @app.callback(
@@ -436,6 +435,42 @@ def set_find_options(slct_location):
     if len(slct_location) > 2:
         return True, True
     return False, False
+
+@app.callback(
+    Output('slct_find', 'options'),
+    Input('slct_find', 'value'))
+def set_additionalfilter_options(slct_find):
+    allMeasureOptions = [{"label": "Loans", "value": 'loan_amount', "disabled": False},
+                  {"label": "Number of Lenders", "value": 'lender_count', "disabled": False},
+                  {"label": "Funded Amount", "value": 'funded_amount', "disabled": False},
+                  {"label": "Term in Months", "value": 'term_in_months', "disabled": False},
+                  {"label": "MPI", "value": 'MPI', "disabled": False}]
+
+    if len(slct_find) == 2:
+        i = 0
+        while i < len(slct_find):
+            print(slct_find[i])
+            for x in allMeasureOptions:
+                if x['value'] == slct_find[i]:
+                    x['disabled'] = False
+                else:
+                    x['disabled'] = True
+            i = i+1
+
+    return allMeasureOptions
+    # for x in allOptions:
+    #     if x['value'] == slct_location:
+    #         x['disabled'] = True
+    #     else:
+    #         x['disabled'] = False
+    #
+    # if slct_location == slct_specificfind_nominal:
+    #     slct_specificfind_nominal = ''
+    #
+    # if len(slct_location_options) > 2:
+    #     return allFilters, slct_specificfind_nominal
+    # else:
+    #     return allFilters[2:6], slct_specificfind_nominal
 
 
 # hide/show graph e.g. all, bar, map
