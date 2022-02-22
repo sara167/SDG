@@ -14,8 +14,7 @@ df.sort_values("Date", inplace=True)
 df['Year'] = df['Date'].dt.year
 df['Year'] = df['Year'].astype(basestring)
 
-df_mpi= pd.read_csv("kiva_mpi_region_locations.csv")
-
+df_mpi = pd.read_csv("kiva_mpi_region_locations.csv")
 
 # genders row
 # for i in range(len(df.borrower_genders)):
@@ -76,7 +75,7 @@ app.layout = html.Div(
                 ),
                 html.Div(
                     className="center",
-                    #style={'margin-left': '222.5px'},
+                    # style={'margin-left': '222.5px'},
                     # 'margin-top': '90px',
                     # 'verticalAlign': 'middle'},
                     children=[
@@ -120,7 +119,7 @@ app.layout = html.Div(
                                      value='',
                                      className="dropdown-scroll",
                                      ),
-                    ],className="dropdown",
+                    ], className="dropdown",
                 ),
             ],
             className="menu",
@@ -287,7 +286,6 @@ app.layout = html.Div(
 )
 
 
-
 # First options for all, map, bar
 @app.callback(
     [Output('slct_location', 'options'),
@@ -426,7 +424,7 @@ def set_find_options(slct_location):
 
 @app.callback(
     [Output('slct_find', 'multi'),
-    Output('slct_find', 'clearable')],
+     Output('slct_find', 'clearable')],
 
     Input('slct_location', 'options')
 
@@ -436,15 +434,16 @@ def set_find_options(slct_location):
         return True, True
     return False, False
 
+
 @app.callback(
     Output('slct_find', 'options'),
     Input('slct_find', 'value'))
 def set_additionalfilter_options(slct_find):
     allMeasureOptions = [{"label": "Loans", "value": 'loan_amount', "disabled": False},
-                  {"label": "Number of Lenders", "value": 'lender_count', "disabled": False},
-                  {"label": "Funded Amount", "value": 'funded_amount', "disabled": False},
-                  {"label": "Term in Months", "value": 'term_in_months', "disabled": False},
-                  {"label": "MPI", "value": 'MPI', "disabled": False}]
+                         {"label": "Number of Lenders", "value": 'lender_count', "disabled": False},
+                         {"label": "Funded Amount", "value": 'funded_amount', "disabled": False},
+                         {"label": "Term in Months", "value": 'term_in_months', "disabled": False},
+                         {"label": "MPI", "value": 'MPI', "disabled": False}]
 
     if len(slct_find) == 2:
         i = 0
@@ -455,22 +454,9 @@ def set_additionalfilter_options(slct_find):
                     x['disabled'] = False
                 else:
                     x['disabled'] = True
-            i = i+1
+            i = i + 1
 
     return allMeasureOptions
-    # for x in allOptions:
-    #     if x['value'] == slct_location:
-    #         x['disabled'] = True
-    #     else:
-    #         x['disabled'] = False
-    #
-    # if slct_location == slct_specificfind_nominal:
-    #     slct_specificfind_nominal = ''
-    #
-    # if len(slct_location_options) > 2:
-    #     return allFilters, slct_specificfind_nominal
-    # else:
-    #     return allFilters[2:6], slct_specificfind_nominal
 
 
 # hide/show graph e.g. all, bar, map
@@ -561,43 +547,50 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
                     TestFinal[i] = df_mpi.groupby(slct_location).aggregate('mean')[slct_find]
                 else:
                     TestFinal[0] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find].sort_values(
-                    ascending=ascending)
+                        ascending=ascending)
             else:
                 while i < yAxisNum:
-                    if  slct_location=='country' and  slct_find[i]=='MPI':
+                    if slct_location == 'country' and slct_find[i] == 'MPI':
                         TestFinal[i] = df_mpi.groupby(slct_location).aggregate('mean')[slct_find[i]]
                         print(TestFinal[i])
                     else:
-                        TestFinal[i] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find[i]].sort_values(
-                        ascending=ascending)
+                        TestFinal[i] = Test.groupby(slct_location).aggregate(slct_aggregation)[
+                            slct_find[i]].sort_values(
+                            ascending=ascending)
                     i = i + 1
 
-        elif head in slct_sorting: # Top
-            if yAxisNum == 1:
-                if slct_location == 'country' and slct_find== 'MPI':
-                    TestFinal[i] = df_mpi.groupby(slct_location).aggregate('mean')[slct_find]
-                else: TestFinal[0] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find].sort_values(
-                    ascending=ascending).head(slct_nvalue)
-            else:
-                while i < yAxisNum:
-                    if  slct_location=='country' and  slct_find[i]=='MPI':
-                        TestFinal[i] = df_mpi.groupby(slct_location).aggregate('mean')[slct_find[i]]
-                    else: TestFinal[i] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find[i]].sort_values(
-                        ascending=ascending).head(slct_nvalue)
-                    i = i + 1
-
-        elif tail in slct_sorting: # Bottom
+        elif head in slct_sorting:  # Top
             if yAxisNum == 1:
                 if slct_location == 'country' and slct_find == 'MPI':
                     TestFinal[i] = df_mpi.groupby(slct_location).aggregate('mean')[slct_find]
-                else: TestFinal[0] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find].sort_values(
-                    ascending=ascending).tail(slct_nvalue)
+                else:
+                    TestFinal[0] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find].sort_values(
+                        ascending=ascending).head(slct_nvalue)
             else:
                 while i < yAxisNum:
-                    if  slct_location=='country' and  slct_find[i]=='MPI':
+                    if slct_location == 'country' and slct_find[i] == 'MPI':
                         TestFinal[i] = df_mpi.groupby(slct_location).aggregate('mean')[slct_find[i]]
-                    else: TestFinal[i] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find[i]].sort_values(
+                    else:
+                        TestFinal[i] = Test.groupby(slct_location).aggregate(slct_aggregation)[
+                            slct_find[i]].sort_values(
+                            ascending=ascending).head(slct_nvalue)
+                    i = i + 1
+
+        elif tail in slct_sorting:  # Bottom
+            if yAxisNum == 1:
+                if slct_location == 'country' and slct_find == 'MPI':
+                    TestFinal[i] = df_mpi.groupby(slct_location).aggregate('mean')[slct_find]
+                else:
+                    TestFinal[0] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find].sort_values(
                         ascending=ascending).tail(slct_nvalue)
+            else:
+                while i < yAxisNum:
+                    if slct_location == 'country' and slct_find[i] == 'MPI':
+                        TestFinal[i] = df_mpi.groupby(slct_location).aggregate('mean')[slct_find[i]]
+                    else:
+                        TestFinal[i] = Test.groupby(slct_location).aggregate(slct_aggregation)[
+                            slct_find[i]].sort_values(
+                            ascending=ascending).tail(slct_nvalue)
                     i = i + 1
 
 
@@ -606,12 +599,14 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
         if yAxisNum == 1:
             if slct_location == 'country' and slct_find == 'MPI':
                 TestFinal[i] = df_mpi.groupby(slct_location).aggregate('mean')[slct_find[i]]
-            else: TestFinal[0] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find]
+            else:
+                TestFinal[0] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find]
         else:
             while i < yAxisNum:
                 if slct_location == 'country' and slct_find[i] == 'MPI':
                     TestFinal[i] = df_mpi.groupby(slct_location).aggregate('mean')[slct_find[i]]
-                else: TestFinal[i] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find[i]]
+                else:
+                    TestFinal[i] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find[i]]
                 i = i + 1
 
     the_label = ['Not shown']
@@ -664,57 +659,65 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
             go.Bar(name=the_label[0],
                    x=TestFinal[0].index,
                    y=TestFinal[0].values,
+                   yaxis='y',
                    offsetgroup=0,
                    ),
             go.Bar(name=the_label[1],
                    x=TestFinal[1].index,
                    y=TestFinal[1].values,
+                   yaxis='y2',
                    offsetgroup=1,
                    )
-        ])
-    elif yAxisNum == 3:
+        ],
+            layout={
+                'yaxis': {'title': the_label[0]},
+                'yaxis2': {'title': the_label[1], 'overlaying': 'y', 'side': 'right'}
+            }
+        )
 
-        bar_chart = go.FigureWidget(data=[
-            go.Bar(name=the_label[0],
-                   x=TestFinal[0].index,
-                   y=TestFinal[0].values,
-                   offsetgroup=0,
-                   ),
-            go.Bar(name=the_label[1],
-                   x=TestFinal[1].index,
-                   y=TestFinal[1].values,
-                   offsetgroup=1,
-                   ),
-            go.Bar(name=the_label[2],
-                   x=TestFinal[2].index,
-                   y=TestFinal[2].values,
-                   offsetgroup=2,
-                   )
-        ])
-    elif yAxisNum == 4:
-
-        bar_chart = go.FigureWidget(data=[
-            go.Bar(name=the_label[0],
-                   x=TestFinal[0].index,
-                   y=TestFinal[0].values,
-                   offsetgroup=0,
-                   ),
-            go.Bar(name=the_label[1],
-                   x=TestFinal[1].index,
-                   y=TestFinal[1].values,
-                   offsetgroup=1,
-                   ),
-            go.Bar(name=the_label[2],
-                   x=TestFinal[2].index,
-                   y=TestFinal[2].values,
-                   offsetgroup=2,
-                   ),
-            go.Bar(name=the_label[3],
-                   x=TestFinal[3].index,
-                   y=TestFinal[3].values,
-                   offsetgroup=3,
-                   )
-        ])
+    # elif yAxisNum == 3:
+    #
+    #     bar_chart = go.FigureWidget(data=[
+    #         go.Bar(name=the_label[0],
+    #                x=TestFinal[0].index,
+    #                y=TestFinal[0].values,
+    #                offsetgroup=0,
+    #                ),
+    #         go.Bar(name=the_label[1],
+    #                x=TestFinal[1].index,
+    #                y=TestFinal[1].values,
+    #                offsetgroup=1,
+    #                ),
+    #         go.Bar(name=the_label[2],
+    #                x=TestFinal[2].index,
+    #                y=TestFinal[2].values,
+    #                offsetgroup=2,
+    #                )
+    #     ])
+    # elif yAxisNum == 4:
+    #
+    #     bar_chart = go.FigureWidget(data=[
+    #         go.Bar(name=the_label[0],
+    #                x=TestFinal[0].index,
+    #                y=TestFinal[0].values,
+    #                offsetgroup=0,
+    #                ),
+    #         go.Bar(name=the_label[1],
+    #                x=TestFinal[1].index,
+    #                y=TestFinal[1].values,
+    #                offsetgroup=1,
+    #                ),
+    #         go.Bar(name=the_label[2],
+    #                x=TestFinal[2].index,
+    #                y=TestFinal[2].values,
+    #                offsetgroup=2,
+    #                ),
+    #         go.Bar(name=the_label[3],
+    #                x=TestFinal[3].index,
+    #                y=TestFinal[3].values,
+    #                offsetgroup=3,
+    #                )
+    #     ])
 
     top_label = {"label": "Top", "value": 'Top'}
     bottom_label = {"label": "Bottom", "value": 'Bottom'}
@@ -726,31 +729,6 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
 
 if __name__ == "__main__":
     app.run_server(debug=True)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 # import dash
 # from dash import dcc, callback_context
