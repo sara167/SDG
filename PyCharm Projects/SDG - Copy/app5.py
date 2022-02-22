@@ -515,10 +515,10 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
     filtered_data = df.loc[mask, :]
     Test = filtered_data
 
-    Test2 = df_extreme
-    #mask2 = ((df_extreme.Year >= start_date)
-    #        & (df_extreme.Year <= end_date))
-    #Test2 = df_extreme.loc[mask2,:]
+
+    mask2 = ((df_extreme.Year >= pd.to_datetime(start_date, format="%Y-%m-%d").year)
+            & (df_extreme.Year <= pd.to_datetime(end_date, format="%Y-%m-%d").year))
+    Test2 = df_extreme.loc[mask2,:]
 
 
     if slct_specificfind:  # there are specific y values
