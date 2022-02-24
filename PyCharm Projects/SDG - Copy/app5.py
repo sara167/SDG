@@ -325,7 +325,8 @@ def set_xy_options(location_main_title, slct_find):
     barOptions = [allOptions[0], allOptions[1], allOptions[7], allOptions[8], allOptions[9], allOptions[10],
                   allOptions[11]]
 
-    if slct_find == 'population_below_poverty' or slct_find == ['population_below_poverty']:
+    if slct_find == 'population_below_poverty' or slct_find == ['population_below_poverty'] or len(slct_find) == 2 and 'population_below_poverty' in slct_find:
+
         for x in allOptions:
             if x['value'] != 'country':
                 x['disabled'] = True
@@ -343,6 +344,7 @@ def set_xy_options(location_main_title, slct_find):
         for x in barOptions:
             if x['value'] != 'country':
                 x['disabled'] = False
+
 
     if location_main_title == 'X-Axis':
         return barOptions
@@ -492,7 +494,6 @@ def set_find_options(slct_find, slct_specificfind_nominal):
 @app.callback(
     [Output('slct_find', 'multi'),
      Output('slct_find', 'clearable')],
-
     Input('slct_location', 'options')
 
 )
@@ -504,14 +505,28 @@ def set_find_options(slct_location):
 
 @app.callback(
     Output('slct_find', 'options'),
-    Input('slct_find', 'value'))
-def set_additionalfilter_options(slct_find):
+    [Input('slct_location','value'),
+    Input('slct_find', 'value'),
+
+
+Input('slct_find', 'options')])
+
+def set_additionalfilter_options(slct_location,slct_find, slct_find_options):
     allMeasureOptions = [{"label": "Loans", "value": 'loan_amount', "disabled": False},
                          {"label": "Number of Lenders", "value": 'lender_count', "disabled": False},
                          {"label": "Funded Amount", "value": 'funded_amount', "disabled": False},
                          {"label": "Term in Months", "value": 'term_in_months', "disabled": False},
                          {"label": "Population Below Poverty Line", "value": 'population_below_poverty',
                           "disabled": False}]
+
+    if slct_location != 'country':
+
+        for x in allMeasureOptions:
+            if x['value'] == 'population_below_poverty':
+                x['disabled'] = True
+            else:
+                x['disabled'] = False
+
 
     if len(slct_find) == 2:
         i = 0
