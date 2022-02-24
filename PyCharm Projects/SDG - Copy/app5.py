@@ -140,7 +140,8 @@ app.layout = html.Div(
                                               {"label": "Activity", "value": 'activity'},
                                               {"label": "Gender", "value": 'borrower_genders'},
                                               {"label": "Repayment Interval", "value": 'repayment_interval'},
-                                              {"label": "Population below poverty line", "value": 'population_below_poverty'}
+                                              {"label": "Population below poverty line",
+                                               "value": 'population_below_poverty'}
                                               ],
                                      multi=False,
                                      value='loan_amount',
@@ -354,8 +355,8 @@ def set_agg_options(slct_find, slct_location, options):
                 return [{"label": "Average", "value": 'mean'}]
             else:
                 return [{"label": "Total", "value": 'sum'},
-                    {"label": "Count", "value": 'count'},
-                    {"label": "Average", "value": 'mean'}]
+                        {"label": "Count", "value": 'count'},
+                        {"label": "Average", "value": 'mean'}]
         else:
             return [{"label": "Total", "value": 'sum'},
                     {"label": "Count", "value": 'count'},
@@ -367,8 +368,9 @@ def set_agg_options(slct_find, slct_location, options):
             return [{"label": "Average " + the_label[0], "value": 'mean'}]
         else:
             return [{"label": "Total " + the_label[0], "value": 'sum'},
-                {"label": "Count " + the_label[0], "value": 'count'},
-                {"label": "Average " + the_label[0], "value": 'mean'}]
+                    {"label": "Count " + the_label[0], "value": 'count'},
+                    {"label": "Average " + the_label[0], "value": 'mean'}]
+
 
 # @app.callback(
 #     [Output('slct_aggregation', 'value'),
@@ -468,7 +470,8 @@ def set_additionalfilter_options(slct_find):
                          {"label": "Number of Lenders", "value": 'lender_count', "disabled": False},
                          {"label": "Funded Amount", "value": 'funded_amount', "disabled": False},
                          {"label": "Term in Months", "value": 'term_in_months', "disabled": False},
-                         {"label": "Population Below Poverty Line", "value": 'population_below_poverty', "disabled": False}]
+                         {"label": "Population Below Poverty Line", "value": 'population_below_poverty',
+                          "disabled": False}]
 
     if len(slct_find) == 2:
         i = 0
@@ -526,7 +529,7 @@ def set_find_options(display_bar, display_map, display_all):
 
      ],
     [State("slct_find", "options"),
-    State("slct_aggregation", "options")]
+     State("slct_aggregation", "options")]
 
 )
 def update_graph(slct_location, slct_location_options, slct_find, slct_specificlocation, slct_sorting, slct_order,
@@ -539,11 +542,9 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
     filtered_data = df.loc[mask, :]
     Test = filtered_data
 
-
     mask2 = ((df_extreme.Year >= pd.to_datetime(start_date, format="%Y-%m-%d").year)
-            & (df_extreme.Year <= pd.to_datetime(end_date, format="%Y-%m-%d").year))
-    Test2 = df_extreme.loc[mask2,:]
-
+             & (df_extreme.Year <= pd.to_datetime(end_date, format="%Y-%m-%d").year))
+    Test2 = df_extreme.loc[mask2, :]
 
     if slct_specificfind:  # there are specific y values
         Test = (Test[(Test[slct_specificfind_nominal].isin(slct_specificfind))])
@@ -597,7 +598,7 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
             if yAxisNum == 1:
                 if slct_location == 'country' and slct_find == 'population_below_poverty':
                     TestFinal[0] = Test2.groupby(slct_location).aggregate('mean')[slct_find].sort_values(
-                            ascending=ascending)
+                        ascending=ascending)
                 else:
                     TestFinal[0] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find].sort_values(
                         ascending=ascending)
@@ -616,7 +617,7 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
             if yAxisNum == 1:
                 if slct_location == 'country' and slct_find == 'population_below_poverty':
                     TestFinal[i] = Test2.groupby(slct_location).aggregate('mean')[slct_find].sort_values(
-                            ascending=ascending)
+                        ascending=ascending)
                 else:
                     TestFinal[0] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find].sort_values(
                         ascending=ascending).tail(slct_nvalue)
@@ -654,22 +655,20 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
 
     if yAxisNum == 1:
 
-        #the_label = [x['label'] for x in options if x['value'] == slct_find]
+        # the_label = [x['label'] for x in options if x['value'] == slct_find]
 
         for x in aggoptions:
 
-            if x['value'] == slct_aggregation and slct_find == 'population_below_poverty' :
+            if x['value'] == slct_aggregation and slct_find == 'population_below_poverty':
                 the_label1 = 'Average'
             elif x['value'] == slct_aggregation:
                 the_label1 = x['label']
-
 
         for x in options:
             if x['value'] == slct_find:
                 the_label2 = x['label']
 
-
-        the_label[0] = the_label1 +' '+ the_label2
+        the_label[0] = the_label1 + ' ' + the_label2
 
     if yAxisNum > 1:
         the_label = ['', '', '', '']
@@ -685,8 +684,6 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
         #
         # elif the_label[1] == 'MPI':
         #     the_label[1] == 'Average MPI'
-
-
 
     data = [dict(
         type='choropleth',
