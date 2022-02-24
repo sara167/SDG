@@ -325,7 +325,7 @@ def set_xy_options(location_main_title, slct_find):
     barOptions = [allOptions[0], allOptions[1], allOptions[7], allOptions[8], allOptions[9], allOptions[10],
                   allOptions[11]]
 
-    if slct_find == 'population_below_poverty':
+    if slct_find == 'population_below_poverty' or slct_find == ['population_below_poverty']:
         for x in allOptions:
             if x['value'] != 'country':
                 x['disabled'] = True
@@ -404,11 +404,9 @@ def set_additionalfilter_options(slct_location, slct_specificfind_nominal, locat
 @app.callback(
     Output('slct_aggregation', 'options'),
     [Input('slct_find', 'value'),
-     Input('slct_location', 'options'),
      Input('location_main_title', 'children')],
     [State("slct_find", "options")])
-def set_agg_options(slct_find, slct_location, location_main_title, options):
-    print(len(slct_find))
+def set_agg_options(slct_find, location_main_title, options):
 
     if location_main_title == 'X-Axis':
         if slct_find == ['population_below_poverty']:
