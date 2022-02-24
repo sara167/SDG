@@ -344,7 +344,6 @@ def set_additionalfilter_options(slct_location, slct_specificfind_nominal, slct_
     [State("slct_find", "options")])
 def set_agg_options(slct_find, slct_location, options):
     if len(slct_location) > 2:
-        print(slct_find)
         if len(slct_find) != 0:
             if slct_find[0] == 'population_below_poverty' and len(slct_find) == 2:
                 return [{"label": "Total", "value": 'sum'},
@@ -474,7 +473,6 @@ def set_additionalfilter_options(slct_find):
     if len(slct_find) == 2:
         i = 0
         while i < len(slct_find):
-            print(slct_find[i])
             for x in allMeasureOptions:
                 if x['value'] == slct_find[i]:
                     x['disabled'] = False
