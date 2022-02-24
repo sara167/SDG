@@ -317,8 +317,6 @@ def set_find_options(display_bar,display_map, display_all):
     else:
         return 'Location', 'Specify Location', 'Measure', 'country', 'loan_amount'
 
-
-
 @app.callback(
     Output('slct_location', 'options'),
      [Input('location_main_title', 'children'),
