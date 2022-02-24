@@ -342,16 +342,42 @@ def set_additionalfilter_options(slct_location, slct_specificfind_nominal, slct_
     [Input('slct_find', 'value'),
      Input('slct_location', 'options')],
     [State("slct_find", "options")])
-def set_location_options(slct_find, slct_location, options):
+def set_agg_options(slct_find, slct_location, options):
     if len(slct_location) > 2:
-        return [{"label": "Total", "value": 'sum'},
-                {"label": "Count", "value": 'count'},
-                {"label": "Average", "value": 'mean'}]
+        print(slct_find)
+        if len(slct_find) != 0:
+            if slct_find[0] == 'population_below_poverty' and len(slct_find) == 2:
+                return [{"label": "Total", "value": 'sum'},
+                        {"label": "Count", "value": 'count'},
+                        {"label": "Average", "value": 'mean'}]
 
-    the_label = [x['label'] for x in options if x['value'] == slct_find]
-    return [{"label": "Total " + the_label[0], "value": 'sum'},
-            {"label": "Count " + the_label[0], "value": 'count'},
-            {"label": "Average " + the_label[0], "value": 'mean'}]
+            if slct_find[0] == 'population_below_poverty':
+                return [{"label": "Average", "value": 'mean'}]
+            else:
+                return [{"label": "Total", "value": 'sum'},
+                    {"label": "Count", "value": 'count'},
+                    {"label": "Average", "value": 'mean'}]
+        else:
+            return [{"label": "Total", "value": 'sum'},
+                    {"label": "Count", "value": 'count'},
+                    {"label": "Average", "value": 'mean'}]
+    else:
+        the_label = [x['label'] for x in options if x['value'] == slct_find]
+
+        if slct_find == 'population_below_poverty':
+            return [{"label": "Average " + the_label[0], "value": 'mean'}]
+        else:
+            return [{"label": "Total " + the_label[0], "value": 'sum'},
+                {"label": "Count " + the_label[0], "value": 'count'},
+                {"label": "Average " + the_label[0], "value": 'mean'}]
+
+# @app.callback(
+#     [Output('slct_aggregation', 'value'),
+#     Input('slct_find', 'value')])
+# def set_agg_value(slct_find):
+#     print(slct_find)
+#     if slct_find == 'population_below_poverty':
+#         return 'mean'
 
 
 # Max value for sorting e.g. 87 for countries
@@ -443,7 +469,7 @@ def set_additionalfilter_options(slct_find):
                          {"label": "Number of Lenders", "value": 'lender_count', "disabled": False},
                          {"label": "Funded Amount", "value": 'funded_amount', "disabled": False},
                          {"label": "Term in Months", "value": 'term_in_months', "disabled": False},
-                         {"label": "Population below poverty line", "value": 'population_below_poverty', "disabled": False}]
+                         {"label": "Population Below Poverty Line", "value": 'population_below_poverty', "disabled": False}]
 
     if len(slct_find) == 2:
         i = 0
