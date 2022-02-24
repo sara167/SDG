@@ -15,6 +15,20 @@ df['Year'] = df['Date'].dt.year
 df['Year'] = df['Year'].astype(basestring)
 
 df_extreme = pd.read_csv("share-of-population-in-extreme-poverty.csv")
+#print(df['country'])
+#print(df_extreme['country'])
+
+newCountry = list(set(df_extreme['country']).intersection(df['country']))
+#print(newCountry)
+
+for x in df['country']:
+    if x not in newCountry:
+        print(x)
+
+
+for x in df_extreme['country']:
+    if x not in newCountry:
+        print(x)
 
 # genders row
 # for i in range(len(df.borrower_genders)):
@@ -558,10 +572,6 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
                 slct_find = slct_find[0]
             elif len(slct_find) == 2:
                 yAxisNum = 2
-            elif len(slct_find) == 3:
-                yAxisNum = 3
-            else:
-                yAxisNum = 4
 
     ascending = 'Ascending' in slct_order
 
