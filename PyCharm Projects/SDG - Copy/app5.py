@@ -678,7 +678,7 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
         elif tail in slct_sorting:  # Bottom
             if yAxisNum == 1:
                 if slct_location == 'country' and slct_find == 'population_below_poverty':
-                    TestFinal[i] = Test2.groupby(slct_location).aggregate('mean')[slct_find].sort_values(
+                    TestFinal[0] = Test2.groupby(slct_location).aggregate('mean')[slct_find].sort_values(
                         ascending=ascending).tail(slct_nvalue)
                 else:
                     TestFinal[0] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find].sort_values(
