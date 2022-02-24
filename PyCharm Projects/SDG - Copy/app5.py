@@ -15,20 +15,19 @@ df['Year'] = df['Date'].dt.year
 df['Year'] = df['Year'].astype(basestring)
 
 df_extreme = pd.read_csv("share-of-population-in-extreme-poverty.csv")
-#print(df['country'])
-#print(df_extreme['country'])
+# print(df['country'])
+# print(df_extreme['country'])
 
 newCountry = list(set(df_extreme['country']).intersection(df['country']))
-#print(newCountry)
+# print(newCountry)
 
-for x in df['country']:
-    if x not in newCountry:
-        print(x)
-
-
-for x in df_extreme['country']:
-    if x not in newCountry:
-        print(x)
+# for x in df['country']:
+#     if x not in newCountry:
+#         print(x)
+#
+# for x in df_extreme['country']:
+#     if x not in newCountry:
+#         print(x)
 
 # genders row
 # for i in range(len(df.borrower_genders)):
@@ -301,35 +300,87 @@ app.layout = html.Div(
 )
 
 
-# First options for all, map, bar
 @app.callback(
-    [Output('slct_location', 'options'),
-     Output('slct_find', 'value'),
+    [Output('location_main_title', 'children'),
+     Output('location-subtitle', 'children'),
+     Output('measure-title', 'children'),
      Output('slct_location', 'value'),
-     Output('slct_specificlocation', 'value'),
-     Output('slct_specificfind', 'value')
+     Output('slct_find', 'value')
      ],
     [Input('display_bar', 'n_clicks'),
      Input('display_map', 'n_clicks'),
      Input('display_all', 'n_clicks')])
-def set_xy_options(display_bar, display_map, display_all):
+def set_find_options(display_bar,display_map, display_all):
     changed_id = [p['prop_id'] for p in callback_context.triggered][0]
+    if 'display_bar' in changed_id:
+        return 'X-Axis', 'Specify X-Axis', 'Y-Axis', 'country', 'loan_amount'
+    else:
+        return 'Location', 'Specify Location', 'Measure', 'country', 'loan_amount'
+
+
+
+@app.callback(
+    Output('slct_location', 'options'),
+     [Input('location_main_title', 'children'),
+      Input('slct_find', 'value')])
+def set_xy_options(location_main_title, slct_find):
     barOptions = [allOptions[0], allOptions[1], allOptions[7], allOptions[8], allOptions[9], allOptions[10],
                   allOptions[11]]
-    if 'display_bar' in changed_id:
-        return barOptions, 'loan_amount', 'country', '', ''
-    else:
-        return [allOptions[0], allOptions[1]], 'loan_amount', 'country', '', ''
 
+    if slct_find == 'population_below_poverty':
+        for x in allOptions:
+            if x['value'] != 'country':
+                x['disabled'] = True
+            else:
+                x['disabled'] = False
+        for x in barOptions:
+            if x['value'] != 'country':
+                x['disabled'] = True
+            else:
+                x['disabled'] = False
+    else:
+        for x in allOptions:
+            if x['value'] != 'country':
+                x['disabled'] = False
+        for x in barOptions:
+            if x['value'] != 'country':
+                x['disabled'] = False
+
+    if location_main_title == 'X-Axis':
+        return barOptions
+    else:
+        return [allOptions[0], allOptions[1]]
+
+
+# First options for all, map, bar
+# @app.callback(
+#      [Output('slct_find', 'value'),
+#      Output('slct_location', 'value'),
+#      Output('slct_specificlocation', 'value'),
+#      Output('slct_specificfind', 'value')
+#      ],
+#     [Input('display_bar', 'n_clicks'),
+#      Input('display_map', 'n_clicks'),
+#      Input('display_all', 'n_clicks')])
+# def set_xy_options(display_bar, display_map, display_all):
+#     changed_id = [p['prop_id'] for p in callback_context.triggered][0]
+#     barOptions = [allOptions[0], allOptions[1], allOptions[7], allOptions[8], allOptions[9], allOptions[10],
+#                   allOptions[11]]
+#     # if 'display_bar' in changed_id:
+#     #     return 'loan_amount', 'country', '', ''
+#     # else:
+#     return'loan_amount', 'country', '', ''
+#
 
 @app.callback(
     [Output('slct_specificfind_nominal', 'options'),
      Output('slct_specificfind_nominal', 'value')],
     [Input('slct_location', 'value'),
      Input('slct_specificfind_nominal', 'value'),
-     Input('slct_location', 'options')]
+     Input('location_main_title', 'children'),
+     ]
 )
-def set_additionalfilter_options(slct_location, slct_specificfind_nominal, slct_location_options):
+def set_additionalfilter_options(slct_location, slct_specificfind_nominal, location_main_title):
     allFilters = [{"label": "Country", "value": 'country', "disabled": False},
                   {"label": "Region", "value": 'region', "disabled": False},
                   {"label": "Sector", "value": 'sector', "disabled": False},
@@ -345,7 +396,7 @@ def set_additionalfilter_options(slct_location, slct_specificfind_nominal, slct_
     if slct_location == slct_specificfind_nominal:
         slct_specificfind_nominal = ''
 
-    if len(slct_location_options) > 2:
+    if location_main_title == 'X-Axis':
         return allFilters, slct_specificfind_nominal
     else:
         return allFilters[2:6], slct_specificfind_nominal
@@ -355,26 +406,20 @@ def set_additionalfilter_options(slct_location, slct_specificfind_nominal, slct_
 @app.callback(
     Output('slct_aggregation', 'options'),
     [Input('slct_find', 'value'),
-     Input('slct_location', 'options')],
+     Input('slct_location', 'options'),
+     Input('location_main_title', 'children')],
     [State("slct_find", "options")])
-def set_agg_options(slct_find, slct_location, options):
-    if len(slct_location) > 2:
-        if len(slct_find) != 0:
-            if slct_find[0] == 'population_below_poverty' and len(slct_find) == 2:
-                return [{"label": "Total", "value": 'sum'},
-                        {"label": "Count", "value": 'count'},
-                        {"label": "Average", "value": 'mean'}]
+def set_agg_options(slct_find, slct_location, location_main_title, options):
+    print(len(slct_find))
 
-            if slct_find[0] == 'population_below_poverty':
-                return [{"label": "Average", "value": 'mean'}]
-            else:
-                return [{"label": "Total", "value": 'sum'},
-                        {"label": "Count", "value": 'count'},
-                        {"label": "Average", "value": 'mean'}]
+    if location_main_title == 'X-Axis':
+        if slct_find == ['population_below_poverty']:
+            return [{"label": "Average", "value": 'mean'}]
         else:
             return [{"label": "Total", "value": 'sum'},
-                    {"label": "Count", "value": 'count'},
-                    {"label": "Average", "value": 'mean'}]
+                {"label": "Count", "value": 'count'},
+                {"label": "Average", "value": 'mean'}]
+
     else:
         the_label = [x['label'] for x in options if x['value'] == slct_find]
 
@@ -446,21 +491,6 @@ def set_find_options(slct_find, slct_specificfind_nominal):
             return [{'label': c, 'value': c} for c in np.sort(df[slct_find].astype(str).unique())]
         else:
             return []
-
-
-@app.callback(
-    [Output('location_main_title', 'children'),
-     Output('location-subtitle', 'children'),
-     Output('measure-title', 'children')
-     ],
-    Input('slct_location', 'options')
-
-)
-def set_find_options(slct_location):
-    if len(slct_location) > 2:
-        return 'X-Axis', 'Specify X-Axis', 'Y-Axis'
-    else:
-        return 'Location', 'Specify Location', 'Measure'
 
 
 @app.callback(
@@ -564,14 +594,14 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
         Test = (Test[(Test[slct_specificfind_nominal].isin(slct_specificfind))])
 
     yAxisNum = 1
-    if len(slct_location_options) > 2:
-        if len(slct_find) <= 4:
-            if len(slct_find) == 0:
-                slct_find = 'loan_amount'
-            elif len(slct_find) == 1:
-                slct_find = slct_find[0]
-            elif len(slct_find) == 2:
-                yAxisNum = 2
+    # if len(slct_location_options) > 2:
+    if len(slct_find) <= 2:
+        if len(slct_find) == 0:
+            slct_find = 'loan_amount'
+        elif len(slct_find) == 1:
+            slct_find = slct_find[0]
+        elif len(slct_find) == 2:
+            yAxisNum = 2
 
     ascending = 'Ascending' in slct_order
 
