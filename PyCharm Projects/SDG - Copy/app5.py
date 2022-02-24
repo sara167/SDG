@@ -332,11 +332,13 @@ def set_xy_options(location_main_title, slct_find):
                 x['disabled'] = True
             else:
                 x['disabled'] = False
+
         for x in barOptions:
             if x['value'] != 'country':
                 x['disabled'] = True
             else:
                 x['disabled'] = False
+
     else:
         for x in allOptions:
             if x['value'] != 'country':
@@ -393,6 +395,7 @@ def set_additionalfilter_options(slct_location, slct_specificfind_nominal, locat
         else:
             x['disabled'] = False
 
+
     if slct_location == slct_specificfind_nominal:
         slct_specificfind_nominal = ''
 
@@ -401,6 +404,15 @@ def set_additionalfilter_options(slct_location, slct_specificfind_nominal, locat
     else:
         return allFilters[2:6], slct_specificfind_nominal
 
+# @app.callback(
+#     [Output('slct_specificfind_nominal', 'disabled'),
+#     Output('slct_specificfind', 'disabled')
+#      ],
+#     Input('slct_find', 'value'))
+# def set_disable_filters(slct_find):
+#     if slct_find == 'population_below_poverty' or slct_find == ['population_below_poverty'] or len(slct_find) == 2 and 'population_below_poverty' in slct_find:
+#         return True, True
+#     return False, False
 
 # Aggregate dropdown options
 @app.callback(
@@ -511,7 +523,7 @@ def set_find_options(slct_location):
 
 Input('slct_find', 'options')])
 
-def set_additionalfilter_options(slct_location,slct_find, slct_find_options):
+def set_measure_options(slct_location,slct_find, slct_find_options):
     allMeasureOptions = [{"label": "Loans", "value": 'loan_amount', "disabled": False},
                          {"label": "Number of Lenders", "value": 'lender_count', "disabled": False},
                          {"label": "Funded Amount", "value": 'funded_amount', "disabled": False},
@@ -520,7 +532,6 @@ def set_additionalfilter_options(slct_location,slct_find, slct_find_options):
                           "disabled": False}]
 
     if slct_location != 'country':
-
         for x in allMeasureOptions:
             if x['value'] == 'population_below_poverty':
                 x['disabled'] = True
