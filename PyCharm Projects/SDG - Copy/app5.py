@@ -660,15 +660,15 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
             if yAxisNum == 1:
                 if slct_location == 'country' and slct_find == 'population_below_poverty':
                     TestFinal[0] = Test2.groupby(slct_location).aggregate('mean')[slct_find].sort_values(
-                        ascending=ascending)
+                        ascending=ascending).head(slct_nvalue)
                 else:
                     TestFinal[0] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find].sort_values(
-                        ascending=ascending)
+                        ascending=ascending).head(slct_nvalue)
             else:
                 while i < yAxisNum:
                     if slct_location == 'country' and slct_find[i] == 'population_below_poverty':
                         TestFinal[i] = Test2.groupby(slct_location).aggregate('mean')[slct_find[i]].sort_values(
-                            ascending=ascending)
+                            ascending=ascending).head(slct_nvalue)
                     else:
                         TestFinal[i] = Test.groupby(slct_location).aggregate(slct_aggregation)[
                             slct_find[i]].sort_values(
@@ -679,7 +679,7 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
             if yAxisNum == 1:
                 if slct_location == 'country' and slct_find == 'population_below_poverty':
                     TestFinal[i] = Test2.groupby(slct_location).aggregate('mean')[slct_find].sort_values(
-                        ascending=ascending)
+                        ascending=ascending).tail(slct_nvalue)
                 else:
                     TestFinal[0] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find].sort_values(
                         ascending=ascending).tail(slct_nvalue)
@@ -687,7 +687,7 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
                 while i < yAxisNum:
                     if slct_location == 'country' and slct_find[i] == 'population_below_poverty':
                         TestFinal[i] = Test2.groupby(slct_location).aggregate('mean')[slct_find[i]].sort_values(
-                            ascending=ascending)
+                            ascending=ascending).tail(slct_nvalue)
                     else:
                         TestFinal[i] = Test.groupby(slct_location).aggregate(slct_aggregation)[
                             slct_find[i]].sort_values(
