@@ -431,28 +431,29 @@ def set_additionalfilter_options(slct_location, slct_specificfind_nominal, locat
 
 # Aggregate dropdown options
 @app.callback(
-    Output('slct_aggregation', 'options'),
+    [Output('slct_aggregation', 'options'),
+     Output('slct_aggregation', 'value')],
     [Input('slct_find', 'value'),
      Input('location_main_title', 'children')],
     [State("slct_find", "options")])
 def set_agg_options(slct_find, location_main_title, options):
     if location_main_title == 'X-Axis':
         if slct_find == ['population_below_poverty']:
-            return [{"label": "Average", "value": 'mean'}]
+            return [{"label": "Average", "value": 'mean'}], 'mean'
         else:
             return [{"label": "Total", "value": 'sum'},
                     {"label": "Count", "value": 'count'},
-                    {"label": "Average", "value": 'mean'}]
+                    {"label": "Average", "value": 'mean'}], 'sum'
 
     else:
         the_label = [x['label'] for x in options if x['value'] == slct_find]
 
         if slct_find == 'population_below_poverty':
-            return [{"label": "Average " + the_label[0], "value": 'mean'}]
+            return [{"label": "Average " + the_label[0], "value": 'mean'}], 'mean'
         else:
             return [{"label": "Total " + the_label[0], "value": 'sum'},
                     {"label": "Count " + the_label[0], "value": 'count'},
-                    {"label": "Average " + the_label[0], "value": 'mean'}]
+                    {"label": "Average " + the_label[0], "value": 'mean'}], 'sum'
 
 
 # @app.callback(
