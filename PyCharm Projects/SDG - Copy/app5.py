@@ -29,6 +29,20 @@ newCountry = list(set(df_extreme['country']).intersection(df['country']))
 #     if x not in newCountry:
 #         print(x)
 
+i = 0
+while i < len(df['country']):
+
+    if df['country'][i] not in newCountry:
+        df.at[i, 'country'] = ''
+    i = i + 1
+
+i = 0
+while i < len(df_extreme['country']):
+
+    if df_extreme['country'][i] not in newCountry:
+        df_extreme.at[i, 'country'] = ''
+    i = i + 1
+
 # genders row
 # for i in range(len(df.borrower_genders)):
 #    final_gender = ''
@@ -310,22 +324,24 @@ app.layout = html.Div(
     [Input('display_bar', 'n_clicks'),
      Input('display_map', 'n_clicks'),
      Input('display_all', 'n_clicks')])
-def set_find_options(display_bar,display_map, display_all):
+def set_find_options(display_bar, display_map, display_all):
     changed_id = [p['prop_id'] for p in callback_context.triggered][0]
     if 'display_bar' in changed_id:
         return 'X-Axis', 'Specify X-Axis', 'Y-Axis', 'country', 'loan_amount'
     else:
         return 'Location', 'Specify Location', 'Measure', 'country', 'loan_amount'
 
+
 @app.callback(
     Output('slct_location', 'options'),
-     [Input('location_main_title', 'children'),
-      Input('slct_find', 'value')])
+    [Input('location_main_title', 'children'),
+     Input('slct_find', 'value')])
 def set_xy_options(location_main_title, slct_find):
     barOptions = [allOptions[0], allOptions[1], allOptions[7], allOptions[8], allOptions[9], allOptions[10],
                   allOptions[11]]
 
-    if slct_find == 'population_below_poverty' or slct_find == ['population_below_poverty'] or len(slct_find) == 2 and 'population_below_poverty' in slct_find:
+    if slct_find == 'population_below_poverty' or slct_find == ['population_below_poverty'] or len(
+            slct_find) == 2 and 'population_below_poverty' in slct_find:
 
         for x in allOptions:
             if x['value'] != 'country':
@@ -346,7 +362,6 @@ def set_xy_options(location_main_title, slct_find):
         for x in barOptions:
             if x['value'] != 'country':
                 x['disabled'] = False
-
 
     if location_main_title == 'X-Axis':
         return barOptions
@@ -395,7 +410,6 @@ def set_additionalfilter_options(slct_location, slct_specificfind_nominal, locat
         else:
             x['disabled'] = False
 
-
     if slct_location == slct_specificfind_nominal:
         slct_specificfind_nominal = ''
 
@@ -403,6 +417,7 @@ def set_additionalfilter_options(slct_location, slct_specificfind_nominal, locat
         return allFilters, slct_specificfind_nominal
     else:
         return allFilters[2:6], slct_specificfind_nominal
+
 
 # @app.callback(
 #     [Output('slct_specificfind_nominal', 'disabled'),
@@ -421,14 +436,13 @@ def set_additionalfilter_options(slct_location, slct_specificfind_nominal, locat
      Input('location_main_title', 'children')],
     [State("slct_find", "options")])
 def set_agg_options(slct_find, location_main_title, options):
-
     if location_main_title == 'X-Axis':
         if slct_find == ['population_below_poverty']:
             return [{"label": "Average", "value": 'mean'}]
         else:
             return [{"label": "Total", "value": 'sum'},
-                {"label": "Count", "value": 'count'},
-                {"label": "Average", "value": 'mean'}]
+                    {"label": "Count", "value": 'count'},
+                    {"label": "Average", "value": 'mean'}]
 
     else:
         the_label = [x['label'] for x in options if x['value'] == slct_find]
@@ -517,13 +531,11 @@ def set_find_options(slct_location):
 
 @app.callback(
     Output('slct_find', 'options'),
-    [Input('slct_location','value'),
-    Input('slct_find', 'value'),
+    [Input('slct_location', 'value'),
+     Input('slct_find', 'value'),
 
-
-Input('slct_find', 'options')])
-
-def set_measure_options(slct_location,slct_find, slct_find_options):
+     Input('slct_find', 'options')])
+def set_measure_options(slct_location, slct_find, slct_find_options):
     allMeasureOptions = [{"label": "Loans", "value": 'loan_amount', "disabled": False},
                          {"label": "Number of Lenders", "value": 'lender_count', "disabled": False},
                          {"label": "Funded Amount", "value": 'funded_amount', "disabled": False},
@@ -537,7 +549,6 @@ def set_measure_options(slct_location,slct_find, slct_find_options):
                 x['disabled'] = True
             else:
                 x['disabled'] = False
-
 
     if len(slct_find) == 2:
         i = 0
