@@ -33,14 +33,14 @@ i = 0
 while i < len(df['country']):
 
     if df['country'][i] not in newCountry:
-        df.at[i, 'country'] = ''
+        df.at[i, 'country'] = 'None'
     i = i + 1
 
 i = 0
 while i < len(df_extreme['country']):
 
     if df_extreme['country'][i] not in newCountry:
-        df_extreme.at[i, 'country'] = ''
+        df_extreme.at[i, 'country'] = 'None'
     i = i + 1
 
 # genders row
@@ -491,8 +491,10 @@ def show_nvalue(slct_sorting):
     Input('slct_location', 'value')
 )
 def set_location_options(slct_location):
+    mask = ((df.country != 'None'))
+    filtered_data = df.loc[mask, :]
     if slct_location in nominalOptions or slct_location == 'country' or slct_location == 'region' or slct_location == 'Year':
-        return [{'label': c, 'value': c} for c in np.sort(df[slct_location].astype(str).unique())]
+        return [{'label': c, 'value': c} for c in np.sort(filtered_data[slct_location].astype(str).unique())]
     else:
         return []
 
@@ -616,12 +618,13 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
                  slct_specificfind, slct_specificfind_nominal, start_date, end_date, map_style,
                  display_all, display_map, display_bar, options, aggoptions):
     mask = ((df.Date >= start_date)
-            & (df.Date <= end_date))
+            & (df.Date <= end_date) & (df.country!='None'))
     filtered_data = df.loc[mask, :]
     Test = filtered_data
 
     mask2 = ((df_extreme.Year >= pd.to_datetime(start_date, format="%Y-%m-%d").year)
-             & (df_extreme.Year <= pd.to_datetime(end_date, format="%Y-%m-%d").year))
+             & (df_extreme.Year <= pd.to_datetime(end_date, format="%Y-%m-%d").year)
+             & (df_extreme.country!='None'))
     Test2 = df_extreme.loc[mask2, :]
 
     if slct_specificfind:  # there are specific y values
@@ -678,13 +681,26 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
                         ascending=ascending).head(slct_nvalue)
             else:
                 while i < yAxisNum:
+                    print(i)
                     if slct_location == 'country' and slct_find[i] == 'population_below_poverty':
-                        TestFinal[i] = Test2.groupby(slct_location).aggregate('mean')[slct_find[i]].sort_values(
+                        if i==0:
+                            TestFinal[i] = Test2.groupby(slct_location).aggregate('mean')[slct_find[i]].sort_values(
                             ascending=ascending).head(slct_nvalue)
+                            print('with head')
+                        else:
+                            TestFinal[i] = Test2.groupby(slct_location).aggregate('mean')[slct_find[i]].sort_values(
+                                ascending=ascending)
+                            print(TestFinal[i])
+                            print('no head')
                     else:
-                        TestFinal[i] = Test.groupby(slct_location).aggregate(slct_aggregation)[
+                        if i==0:
+                            TestFinal[i] = Test.groupby(slct_location).aggregate(slct_aggregation)[
                             slct_find[i]].sort_values(
                             ascending=ascending).head(slct_nvalue)
+                        else:
+                            TestFinal[i] = Test.groupby(slct_location).aggregate(slct_aggregation)[
+                                slct_find[i]].sort_values(
+                                ascending=ascending)
                     i = i + 1
 
         elif tail in slct_sorting:  # Bottom
@@ -698,12 +714,21 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
             else:
                 while i < yAxisNum:
                     if slct_location == 'country' and slct_find[i] == 'population_below_poverty':
-                        TestFinal[i] = Test2.groupby(slct_location).aggregate('mean')[slct_find[i]].sort_values(
+                        if i == 0:
+                            TestFinal[i] = Test2.groupby(slct_location).aggregate('mean')[slct_find[i]].sort_values(
                             ascending=ascending).tail(slct_nvalue)
+                        else:
+                            TestFinal[i] = Test2.groupby(slct_location).aggregate('mean')[slct_find[i]].sort_values(
+                                ascending=ascending)
                     else:
-                        TestFinal[i] = Test.groupby(slct_location).aggregate(slct_aggregation)[
+                        if i==0:
+                            TestFinal[i] = Test.groupby(slct_location).aggregate(slct_aggregation)[
                             slct_find[i]].sort_values(
                             ascending=ascending).tail(slct_nvalue)
+                        else:
+                            TestFinal[i] = Test.groupby(slct_location).aggregate(slct_aggregation)[
+                                slct_find[i]].sort_values(
+                                ascending=ascending)
                     i = i + 1
 
 
@@ -721,6 +746,12 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
                 else:
                     TestFinal[i] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find[i]]
                 i = i + 1
+
+
+    if yAxisNum>1 and (tail in slct_sorting or head in slct_sorting):
+        TestFinal[1] = TestFinal[1].filter(items=TestFinal[0].index.tolist(), axis=0)
+
+
 
     the_label = ['Not shown']
     aggoptions = [{"label": "Total", "value": 'sum'},
@@ -753,11 +784,6 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
                     the_label[counter] = x['label']
                     counter = counter + 1
 
-        # if the_label[0] == 'MPI':
-        #     the_label[0] == 'Average MPI'
-        #
-        # elif the_label[1] == 'MPI':
-        #     the_label[1] == 'Average MPI'
 
     data = [dict(
         type='choropleth',
