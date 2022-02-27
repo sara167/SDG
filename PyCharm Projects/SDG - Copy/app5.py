@@ -33,14 +33,14 @@ i = 0
 while i < len(df['country']):
 
     if df['country'][i] not in newCountry:
-        df.at[i, 'country'] = ''
+        df.at[i, 'country'] = 'None'
     i = i + 1
 
 i = 0
 while i < len(df_extreme['country']):
 
     if df_extreme['country'][i] not in newCountry:
-        df_extreme.at[i, 'country'] = ''
+        df_extreme.at[i, 'country'] = 'None'
     i = i + 1
 
 # genders row
@@ -491,8 +491,10 @@ def show_nvalue(slct_sorting):
     Input('slct_location', 'value')
 )
 def set_location_options(slct_location):
+    mask = ((df.country != 'None'))
+    filtered_data = df.loc[mask, :]
     if slct_location in nominalOptions or slct_location == 'country' or slct_location == 'region' or slct_location == 'Year':
-        return [{'label': c, 'value': c} for c in np.sort(df[slct_location].astype(str).unique())]
+        return [{'label': c, 'value': c} for c in np.sort(filtered_data[slct_location].astype(str).unique())]
     else:
         return []
 
@@ -616,12 +618,13 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
                  slct_specificfind, slct_specificfind_nominal, start_date, end_date, map_style,
                  display_all, display_map, display_bar, options, aggoptions):
     mask = ((df.Date >= start_date)
-            & (df.Date <= end_date))
+            & (df.Date <= end_date) & (df.country!='None'))
     filtered_data = df.loc[mask, :]
     Test = filtered_data
 
     mask2 = ((df_extreme.Year >= pd.to_datetime(start_date, format="%Y-%m-%d").year)
-             & (df_extreme.Year <= pd.to_datetime(end_date, format="%Y-%m-%d").year))
+             & (df_extreme.Year <= pd.to_datetime(end_date, format="%Y-%m-%d").year)
+             & (df_extreme.country!='None'))
     Test2 = df_extreme.loc[mask2, :]
 
     if slct_specificfind:  # there are specific y values
