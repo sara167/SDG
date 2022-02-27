@@ -17,7 +17,6 @@ df['Year'] = df['Year'].astype(basestring)
 df_extreme = pd.read_csv("share-of-population-in-extreme-poverty.csv")
 df_tweets = pd.read_csv("Final_Data1.csv")
 
-
 # newCountry = list(set(df_extreme['country']).intersection(df['country']))
 newCountry = list(set(df_extreme['country']).intersection(df['country'], df_tweets['country']))
 # print(newCountry)
@@ -317,6 +316,7 @@ app.layout = html.Div(
     ]
 )
 
+
 @app.callback(
     [Output('location_main_title', 'children'),
      Output('location-subtitle', 'children'),
@@ -481,6 +481,10 @@ def set_agg_options(slct_find, location_main_title, options):
             return [{"label": "Average", "value": 'mean'}], 'mean'
         elif slct_find == ['Keyword']:
             return [{"label": "Count", "value": 'count'}], 'count'
+        elif 'population_below_poverty' in slct_find and 'Keyword' in slct_find:
+            return [], ''
+        elif slct_find == ['Keyword']:
+            return [{"label": "Count", "value": 'count'}], 'count'
         else:
 
             return [{"label": "Total", "value": 'sum'},
@@ -498,7 +502,6 @@ def set_agg_options(slct_find, location_main_title, options):
             return [{"label": "Total " + the_label[0], "value": 'sum'},
                     {"label": "Count " + the_label[0], "value": 'count'},
                     {"label": "Average " + the_label[0], "value": 'mean'}], 'sum'
-
 
 
 # @app.callback(
@@ -579,6 +582,7 @@ def set_find_options(slct_location):
         return True, True
     return False, False
 
+
 @app.callback(
     Output('date-range', 'disabled'),
     Input('slct_find', 'value')
@@ -588,6 +592,7 @@ def set_date(slct_find):
     if slct_find == 'Keyword' or slct_find == ['Keyword'] or len(slct_find) == 2 and 'Keyword' in slct_find:
         return True
     return False
+
 
 @app.callback(
     Output('slct_find', 'options'),
@@ -868,13 +873,25 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
 
         the_label[0] = the_label1 + ' ' + the_label2
 
+    print(slct_find)
     if yAxisNum > 1:
         the_label = ['', '', '', '']
         counter = 0
         for i in slct_find:
+            for x in aggoptions:
+                if i == 'population_below_poverty':
+                    the_label0 = 'Average'
+
+                elif i == 'Keyword':
+                    the_label0 = 'Count'
+
+                elif x['value'] == slct_aggregation:
+                    the_label0 = x['label']
+
             for x in options:
                 if x['value'] == i:
-                    the_label[counter] = x['label']
+                    the_label[counter] = the_label0 + ' ' + x['label']
+                    print(the_label[counter])
                     counter = counter + 1
 
     data = [dict(
