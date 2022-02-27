@@ -15,19 +15,14 @@ df['Year'] = df['Date'].dt.year
 df['Year'] = df['Year'].astype(basestring)
 
 df_extreme = pd.read_csv("share-of-population-in-extreme-poverty.csv")
-# print(df['country'])
-# print(df_extreme['country'])
+df_tweets = pd.read_csv("Final_Data1.csv")
 
-newCountry = list(set(df_extreme['country']).intersection(df['country']))
+
+# newCountry = list(set(df_extreme['country']).intersection(df['country']))
+newCountry = list(set(df_extreme['country']).intersection(df['country'], df_tweets['country']))
 # print(newCountry)
+# print(len(newCountry))
 
-# for x in df['country']:
-#     if x not in newCountry:
-#         print(x)
-#
-# for x in df_extreme['country']:
-#     if x not in newCountry:
-#         print(x)
 
 i = 0
 while i < len(df['country']):
@@ -41,6 +36,13 @@ while i < len(df_extreme['country']):
 
     if df_extreme['country'][i] not in newCountry:
         df_extreme.at[i, 'country'] = 'None'
+    i = i + 1
+
+i = 0
+while i < len(df_tweets['country']):
+
+    if df_tweets['country'][i] not in newCountry:
+        df_tweets.at[i, 'country'] = 'None'
     i = i + 1
 
 # genders row
@@ -69,6 +71,7 @@ allOptions = [{"label": "Country", "value": 'country', "disabled": False},
               {"label": "Funded Amount", "value": 'funded_amount', "disabled": False},
               {"label": "Term in Months", "value": 'term_in_months', "disabled": False},
               {"label": "Population below poverty line", "value": 'population_below_poverty', "disabled": False},
+              {"label": "Tweets", "value": 'Keyword', "disabled": False},
               {"label": "Year", "value": 'Year', "disabled": False},
               {"label": "Sector", "value": 'sector', "disabled": False},
               {"label": "Activity", "value": 'activity', "disabled": False},
@@ -168,7 +171,8 @@ app.layout = html.Div(
                                               {"label": "Gender", "value": 'borrower_genders'},
                                               {"label": "Repayment Interval", "value": 'repayment_interval'},
                                               {"label": "Population below poverty line",
-                                               "value": 'population_below_poverty'}
+                                               "value": 'population_below_poverty'},
+                                              {"label": "Tweets", "value": 'Keyword'}
                                               ],
                                      multi=False,
                                      value='loan_amount',
@@ -313,7 +317,6 @@ app.layout = html.Div(
     ]
 )
 
-
 @app.callback(
     [Output('location_main_title', 'children'),
      Output('location-subtitle', 'children'),
@@ -340,8 +343,10 @@ def set_xy_options(location_main_title, slct_find):
     barOptions = [allOptions[0], allOptions[1], allOptions[7], allOptions[8], allOptions[9], allOptions[10],
                   allOptions[11]]
 
-    if slct_find == 'population_below_poverty' or slct_find == ['population_below_poverty'] or len(
-            slct_find) == 2 and 'population_below_poverty' in slct_find:
+    if (slct_find == 'population_below_poverty' or slct_find == ['population_below_poverty'] or len(
+            slct_find) == 2 and 'population_below_poverty' in slct_find) or (
+            slct_find == 'Keyword' or slct_find == ['Keyword'] or len(
+        slct_find) == 2 and 'Keyword' in slct_find):
 
         for x in allOptions:
             if x['value'] != 'country':
@@ -395,15 +400,18 @@ def set_xy_options(location_main_title, slct_find):
     [Input('slct_location', 'value'),
      Input('slct_specificfind_nominal', 'value'),
      Input('location_main_title', 'children'),
+     Input('slct_find', 'value'),
+
      ]
 )
-def set_additionalfilter_options(slct_location, slct_specificfind_nominal, location_main_title):
+def set_additionalfilter_options(slct_location, slct_specificfind_nominal, location_main_title, slct_find):
     allFilters = [{"label": "Country", "value": 'country', "disabled": False},
                   {"label": "Region", "value": 'region', "disabled": False},
                   {"label": "Sector", "value": 'sector', "disabled": False},
                   {"label": "Activity", "value": 'activity', "disabled": False},
                   {"label": "Gender", "value": 'borrower_genders', "disabled": False},
-                  {"label": "Repayment Interval", "value": 'repayment_interval', "disabled": False}]
+                  {"label": "Repayment Interval", "value": 'repayment_interval', "disabled": False},
+                  {"label": "Tweets", "value": 'Keyword', "disabled": False}]
     for x in allFilters:
         if x['value'] == slct_location:
             x['disabled'] = True
@@ -413,10 +421,41 @@ def set_additionalfilter_options(slct_location, slct_specificfind_nominal, locat
     if slct_location == slct_specificfind_nominal:
         slct_specificfind_nominal = ''
 
+    keywordCondition = (slct_find == 'Keyword' or slct_find == ['Keyword'])
+
+    populationCondition = (slct_find == 'population_below_poverty' or slct_find == ['population_below_poverty'])
+
+    if keywordCondition or populationCondition:
+        slct_specificfind_nominal = ''
+
+    if keywordCondition:
+        for x in allFilters:
+            if x['value'] == 'Keyword':
+                x['disabled'] = False
+            else:
+                x['disabled'] = True
+
+    elif not keywordCondition:
+        for x in allFilters:
+            if x['value'] == 'Keyword':
+                x['disabled'] = True
+            else:
+                x['disabled'] = False
+
+    if populationCondition:
+        for x in allFilters:
+            x['disabled'] = True
+
+    if (len(slct_find) == 2 and 'Keyword' in slct_find) or (
+            len(slct_find) == 2 and 'population_below_poverty' in slct_find):
+        for x in allFilters:
+            x['disabled'] = True
+        slct_specificfind_nominal = ''
+
     if location_main_title == 'X-Axis':
         return allFilters, slct_specificfind_nominal
     else:
-        return allFilters[2:6], slct_specificfind_nominal
+        return allFilters[2:7], slct_specificfind_nominal
 
 
 # @app.callback(
@@ -440,7 +479,10 @@ def set_agg_options(slct_find, location_main_title, options):
     if location_main_title == 'X-Axis':
         if slct_find == ['population_below_poverty']:
             return [{"label": "Average", "value": 'mean'}], 'mean'
+        elif slct_find == ['Keyword']:
+            return [{"label": "Count", "value": 'count'}], 'count'
         else:
+
             return [{"label": "Total", "value": 'sum'},
                     {"label": "Count", "value": 'count'},
                     {"label": "Average", "value": 'mean'}], 'sum'
@@ -450,10 +492,13 @@ def set_agg_options(slct_find, location_main_title, options):
 
         if slct_find == 'population_below_poverty':
             return [{"label": "Average " + the_label[0], "value": 'mean'}], 'mean'
+        elif slct_find == 'Keyword':
+            return [{"label": "Count " + the_label[0], "value": 'count'}], 'count'
         else:
             return [{"label": "Total " + the_label[0], "value": 'sum'},
                     {"label": "Count " + the_label[0], "value": 'count'},
                     {"label": "Average " + the_label[0], "value": 'mean'}], 'sum'
+
 
 
 # @app.callback(
@@ -514,7 +559,10 @@ def set_find_options(slct_find, slct_specificfind_nominal):
             return []
 
     else:
-        if slct_find in nominalOptions or slct_find == 'Year' or slct_find == 'country' or slct_find == 'region':
+        if slct_find == 'Keyword':
+            return [{'label': c, 'value': c} for c in np.sort(df_tweets[slct_find].astype(str).unique())]
+
+        elif slct_find in nominalOptions or slct_find == 'Year' or slct_find == 'country' or slct_find == 'region':
             return [{'label': c, 'value': c} for c in np.sort(df[slct_find].astype(str).unique())]
         else:
             return []
@@ -531,6 +579,15 @@ def set_find_options(slct_location):
         return True, True
     return False, False
 
+@app.callback(
+    Output('date-range', 'disabled'),
+    Input('slct_find', 'value')
+
+)
+def set_date(slct_find):
+    if slct_find == 'Keyword' or slct_find == ['Keyword'] or len(slct_find) == 2 and 'Keyword' in slct_find:
+        return True
+    return False
 
 @app.callback(
     Output('slct_find', 'options'),
@@ -544,11 +601,12 @@ def set_measure_options(slct_location, slct_find, slct_find_options):
                          {"label": "Funded Amount", "value": 'funded_amount', "disabled": False},
                          {"label": "Term in Months", "value": 'term_in_months', "disabled": False},
                          {"label": "Population Below Poverty Line", "value": 'population_below_poverty',
-                          "disabled": False}]
+                          "disabled": False},
+                         {"label": "Tweets", "value": 'Keyword', "disabled": False}]
 
     if slct_location != 'country':
         for x in allMeasureOptions:
-            if x['value'] == 'population_below_poverty':
+            if x['value'] == 'population_below_poverty' or x['value'] == 'Keyword':
                 x['disabled'] = True
             else:
                 x['disabled'] = False
@@ -618,16 +676,21 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
                  slct_specificfind, slct_specificfind_nominal, start_date, end_date, map_style,
                  display_all, display_map, display_bar, options, aggoptions):
     mask = ((df.Date >= start_date)
-            & (df.Date <= end_date) & (df.country!='None'))
+            & (df.Date <= end_date) & (df.country != 'None'))
     filtered_data = df.loc[mask, :]
     Test = filtered_data
 
     mask2 = ((df_extreme.Year >= pd.to_datetime(start_date, format="%Y-%m-%d").year)
              & (df_extreme.Year <= pd.to_datetime(end_date, format="%Y-%m-%d").year)
-             & (df_extreme.country!='None'))
+             & (df_extreme.country != 'None'))
     Test2 = df_extreme.loc[mask2, :]
+    mask3 = (df_tweets.country != 'None')
+    Test3 = df_tweets.loc[mask3, :]
 
-    if slct_specificfind:  # there are specific y values
+    if slct_specificfind and slct_specificfind_nominal == 'Keyword':  # there are specific y values
+        Test3 = (Test3[(Test3[slct_specificfind_nominal].isin(slct_specificfind))])
+
+    elif slct_specificfind and slct_specificfind_nominal:  # there are specific y values
         Test = (Test[(Test[slct_specificfind_nominal].isin(slct_specificfind))])
 
     yAxisNum = 1
@@ -657,6 +720,9 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
                 if slct_location == 'country' and slct_find == 'population_below_poverty':
                     TestFinal[0] = Test2.groupby(slct_location).aggregate('mean')[slct_find].sort_values(
                         ascending=ascending)
+                elif slct_location == 'country' and slct_find == 'Keyword':
+                    TestFinal[0] = Test3.groupby(slct_location).aggregate('count')[slct_find].sort_values(
+                        ascending=ascending)
                 else:
                     TestFinal[0] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find].sort_values(
                         ascending=ascending)
@@ -664,6 +730,9 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
                 while i < yAxisNum:
                     if slct_location == 'country' and slct_find[i] == 'population_below_poverty':
                         TestFinal[i] = Test2.groupby(slct_location).aggregate('mean')[slct_find[i]].sort_values(
+                            ascending=ascending)
+                    elif slct_location == 'country' and slct_find[i] == 'Keyword':
+                        TestFinal[i] = Test3.groupby(slct_location).aggregate('count')[slct_find[i]].sort_values(
                             ascending=ascending)
                     else:
                         TestFinal[i] = Test.groupby(slct_location).aggregate(slct_aggregation)[
@@ -676,27 +745,33 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
                 if slct_location == 'country' and slct_find == 'population_below_poverty':
                     TestFinal[0] = Test2.groupby(slct_location).aggregate('mean')[slct_find].sort_values(
                         ascending=ascending).head(slct_nvalue)
+                elif slct_location == 'country' and slct_find == 'Keyword':
+                    TestFinal[0] = Test3.groupby(slct_location).aggregate('count')[slct_find].sort_values(
+                        ascending=ascending).head(slct_nvalue)
                 else:
                     TestFinal[0] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find].sort_values(
                         ascending=ascending).head(slct_nvalue)
             else:
                 while i < yAxisNum:
-                    print(i)
                     if slct_location == 'country' and slct_find[i] == 'population_below_poverty':
-                        if i==0:
+                        if i == 0:
                             TestFinal[i] = Test2.groupby(slct_location).aggregate('mean')[slct_find[i]].sort_values(
-                            ascending=ascending).head(slct_nvalue)
-                            print('with head')
+                                ascending=ascending).head(slct_nvalue)
                         else:
                             TestFinal[i] = Test2.groupby(slct_location).aggregate('mean')[slct_find[i]].sort_values(
                                 ascending=ascending)
-                            print(TestFinal[i])
-                            print('no head')
+                    elif slct_location == 'country' and slct_find[i] == 'Keyword':
+                        if i == 0:
+                            TestFinal[i] = Test3.groupby(slct_location).aggregate('count')[slct_find[i]].sort_values(
+                                ascending=ascending).head(slct_nvalue)
+                        else:
+                            TestFinal[i] = Test3.groupby(slct_location).aggregate('mean')[slct_find[i]].sort_values(
+                                ascending=ascending)
                     else:
-                        if i==0:
+                        if i == 0:
                             TestFinal[i] = Test.groupby(slct_location).aggregate(slct_aggregation)[
-                            slct_find[i]].sort_values(
-                            ascending=ascending).head(slct_nvalue)
+                                slct_find[i]].sort_values(
+                                ascending=ascending).head(slct_nvalue)
                         else:
                             TestFinal[i] = Test.groupby(slct_location).aggregate(slct_aggregation)[
                                 slct_find[i]].sort_values(
@@ -708,6 +783,9 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
                 if slct_location == 'country' and slct_find == 'population_below_poverty':
                     TestFinal[0] = Test2.groupby(slct_location).aggregate('mean')[slct_find].sort_values(
                         ascending=ascending).tail(slct_nvalue)
+                elif slct_location == 'country' and slct_find == 'Keyword':
+                    TestFinal[0] = Test3.groupby(slct_location).aggregate('count')[slct_find].sort_values(
+                        ascending=ascending).tail(slct_nvalue)
                 else:
                     TestFinal[0] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find].sort_values(
                         ascending=ascending).tail(slct_nvalue)
@@ -716,15 +794,22 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
                     if slct_location == 'country' and slct_find[i] == 'population_below_poverty':
                         if i == 0:
                             TestFinal[i] = Test2.groupby(slct_location).aggregate('mean')[slct_find[i]].sort_values(
-                            ascending=ascending).tail(slct_nvalue)
+                                ascending=ascending).tail(slct_nvalue)
                         else:
                             TestFinal[i] = Test2.groupby(slct_location).aggregate('mean')[slct_find[i]].sort_values(
                                 ascending=ascending)
+                    elif slct_location == 'country' and slct_find[i] == 'Keyword':
+                        if i == 0:
+                            TestFinal[i] = Test3.groupby(slct_location).aggregate('count')[slct_find[i]].sort_values(
+                                ascending=ascending).tail(slct_nvalue)
+                        else:
+                            TestFinal[i] = Test3.groupby(slct_location).aggregate('count')[slct_find[i]].sort_values(
+                                ascending=ascending)
                     else:
-                        if i==0:
+                        if i == 0:
                             TestFinal[i] = Test.groupby(slct_location).aggregate(slct_aggregation)[
-                            slct_find[i]].sort_values(
-                            ascending=ascending).tail(slct_nvalue)
+                                slct_find[i]].sort_values(
+                                ascending=ascending).tail(slct_nvalue)
                         else:
                             TestFinal[i] = Test.groupby(slct_location).aggregate(slct_aggregation)[
                                 slct_find[i]].sort_values(
@@ -734,24 +819,32 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
 
     else:  ##specific location
         Test = (Test[(Test[slct_location].isin(slct_specificlocation))])
+        Test2 = (Test2[(Test2[slct_location].isin(slct_specificlocation))])
+        Test3 = (Test3[(Test3[slct_location].isin(slct_specificlocation))])
+
         if yAxisNum == 1:
             if slct_location == 'country' and slct_find == 'population_below_poverty':
                 TestFinal[i] = Test2.groupby(slct_location).aggregate('mean')[slct_find[i]]
+            elif slct_location == 'country' and slct_find == 'Keyword':
+                TestFinal[i] = Test3.groupby(slct_location).aggregate('count')[slct_find[i]]
             else:
                 TestFinal[0] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find]
         else:
             while i < yAxisNum:
                 if slct_location == 'country' and slct_find[i] == 'population_below_poverty':
                     TestFinal[i] = Test2.groupby(slct_location).aggregate('mean')[slct_find[i]]
+                elif slct_location == 'country' and slct_find[i] == 'Keyword':
+                    TestFinal[i] = Test3.groupby(slct_location).aggregate('count')[slct_find[i]]
                 else:
                     TestFinal[i] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find[i]]
                 i = i + 1
 
-
-    if yAxisNum>1 and (tail in slct_sorting or head in slct_sorting):
+    # print(head)
+    if yAxisNum > 1 and (slct_sorting is None):
         TestFinal[1] = TestFinal[1].filter(items=TestFinal[0].index.tolist(), axis=0)
 
-
+    elif yAxisNum > 1 and (tail in slct_sorting or head in slct_sorting):
+        TestFinal[1] = TestFinal[1].filter(items=TestFinal[0].index.tolist(), axis=0)
 
     the_label = ['Not shown']
     aggoptions = [{"label": "Total", "value": 'sum'},
@@ -783,7 +876,6 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
                 if x['value'] == i:
                     the_label[counter] = x['label']
                     counter = counter + 1
-
 
     data = [dict(
         type='choropleth',
@@ -837,7 +929,6 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
                 'yaxis2': {'title': the_label[1], 'overlaying': 'y', 'side': 'right'}
             }
         )
-
 
     top_label = {"label": "Top", "value": 'Top'}
     bottom_label = {"label": "Bottom", "value": 'Bottom'}
