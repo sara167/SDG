@@ -838,9 +838,9 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
 
         if yAxisNum == 1:
             if slct_location == 'country' and slct_find == 'population_below_poverty':
-                TestFinal[i] = Test2.groupby(slct_location).aggregate('mean')[slct_find[i]]
+                TestFinal[i] = Test2.groupby(slct_location).aggregate('mean')[slct_find]
             elif slct_location == 'country' and slct_find == 'Keyword':
-                TestFinal[i] = Test3.groupby(slct_location).aggregate('count')[slct_find[i]]
+                TestFinal[i] = Test3.groupby(slct_location).aggregate('count')[slct_find]
             else:
                 TestFinal[0] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find]
         else:
