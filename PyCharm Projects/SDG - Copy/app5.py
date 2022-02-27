@@ -338,35 +338,45 @@ def set_find_options(display_bar, display_map, display_all):
 @app.callback(
     Output('slct_location', 'options'),
     [Input('location_main_title', 'children'),
-     Input('slct_find', 'value')])
-def set_xy_options(location_main_title, slct_find):
-    barOptions = [allOptions[0], allOptions[1], allOptions[7], allOptions[8], allOptions[9], allOptions[10],
-                  allOptions[11]]
+     Input('slct_find', 'value'),
+     Input('slct_specificfind_nominal', 'value'),
+
+
+Input('slct_location', 'value')])
+
+def set_xy_options(location_main_title, slct_find, slct_specificfind_nominal, slct_location):
+    barOptions = [allOptions[0], allOptions[1], allOptions[8], allOptions[9], allOptions[10],
+                  allOptions[11], allOptions[12]]
+    for x in barOptions:
+        if x['value'] == slct_specificfind_nominal:
+            x['disabled'] = True
+        else:
+            x['disabled'] = False
+
 
     if (slct_find == 'population_below_poverty' or slct_find == ['population_below_poverty'] or len(
             slct_find) == 2 and 'population_below_poverty' in slct_find) or (
             slct_find == 'Keyword' or slct_find == ['Keyword'] or len(
         slct_find) == 2 and 'Keyword' in slct_find):
-
         for x in allOptions:
             if x['value'] != 'country':
                 x['disabled'] = True
-            else:
-                x['disabled'] = False
+            # else:
+            #     x['disabled'] = False
 
         for x in barOptions:
             if x['value'] != 'country':
                 x['disabled'] = True
-            else:
-                x['disabled'] = False
+            # else:
+            #     x['disabled'] = False
 
-    else:
-        for x in allOptions:
-            if x['value'] != 'country':
-                x['disabled'] = False
-        for x in barOptions:
-            if x['value'] != 'country':
-                x['disabled'] = False
+    # else:
+    #     for x in allOptions:
+    #         if x['value'] != 'country':
+    #             x['disabled'] = False
+    #     for x in barOptions:
+    #         if x['value'] != 'country':
+    #             x['disabled'] = False
 
     if location_main_title == 'X-Axis':
         return barOptions
@@ -412,6 +422,7 @@ def set_additionalfilter_options(slct_location, slct_specificfind_nominal, locat
                   {"label": "Gender", "value": 'borrower_genders', "disabled": False},
                   {"label": "Repayment Interval", "value": 'repayment_interval', "disabled": False},
                   {"label": "Tweets", "value": 'Keyword', "disabled": False}]
+
     for x in allFilters:
         if x['value'] == slct_location:
             x['disabled'] = True
@@ -425,22 +436,20 @@ def set_additionalfilter_options(slct_location, slct_specificfind_nominal, locat
 
     populationCondition = (slct_find == 'population_below_poverty' or slct_find == ['population_below_poverty'])
 
-    if keywordCondition or populationCondition:
-        slct_specificfind_nominal = ''
+    # if keywordCondition or populationCondition:
+    #     slct_specificfind_nominal = ''
 
     if keywordCondition:
         for x in allFilters:
-            if x['value'] == 'Keyword':
-                x['disabled'] = False
-            else:
+            if x['value'] != 'Keyword':
                 x['disabled'] = True
 
     elif not keywordCondition:
         for x in allFilters:
             if x['value'] == 'Keyword':
                 x['disabled'] = True
-            else:
-                x['disabled'] = False
+            # else:
+            #     x['disabled'] = False
 
     if populationCondition:
         for x in allFilters:
@@ -873,7 +882,6 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
 
         the_label[0] = the_label1 + ' ' + the_label2
 
-    print(slct_find)
     if yAxisNum > 1:
         the_label = ['', '', '', '']
         counter = 0
@@ -891,7 +899,6 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
             for x in options:
                 if x['value'] == i:
                     the_label[counter] = the_label0 + ' ' + x['label']
-                    print(the_label[counter])
                     counter = counter + 1
 
     data = [dict(
