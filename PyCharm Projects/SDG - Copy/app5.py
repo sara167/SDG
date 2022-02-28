@@ -779,7 +779,7 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
                             TestFinal[i] = Test3.groupby(slct_location).aggregate('count')[slct_find[i]].sort_values(
                                 ascending=ascending).head(slct_nvalue)
                         else:
-                            TestFinal[i] = Test3.groupby(slct_location).aggregate('mean')[slct_find[i]].sort_values(
+                            TestFinal[i] = Test3.groupby(slct_location).aggregate('count')[slct_find[i]].sort_values(
                                 ascending=ascending)
                     else:
                         if i == 0:
