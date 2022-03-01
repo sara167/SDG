@@ -149,9 +149,3 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
-
- .dropdown-scroll {
- overflow: auto;
- height: 55px;
-
- }
