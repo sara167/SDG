@@ -336,14 +336,12 @@ def set_find_options(display_bar, display_map, display_all):
 
 
 @app.callback(
-    Output('slct_location', 'options'),
+    [Output('slct_location', 'options'),
+     Output('slct_specificlocation', 'value')],
     [Input('location_main_title', 'children'),
      Input('slct_find', 'value'),
      Input('slct_specificfind_nominal', 'value'),
-
-
-Input('slct_location', 'value')])
-
+     Input('slct_location', 'value')])
 def set_xy_options(location_main_title, slct_find, slct_specificfind_nominal, slct_location):
     barOptions = [allOptions[0], allOptions[1], allOptions[8], allOptions[9], allOptions[10],
                   allOptions[11], allOptions[12]]
@@ -352,7 +350,6 @@ def set_xy_options(location_main_title, slct_find, slct_specificfind_nominal, sl
             x['disabled'] = True
         else:
             x['disabled'] = False
-
 
     if (slct_find == 'population_below_poverty' or slct_find == ['population_below_poverty'] or len(
             slct_find) == 2 and 'population_below_poverty' in slct_find) or (
@@ -379,9 +376,9 @@ def set_xy_options(location_main_title, slct_find, slct_specificfind_nominal, sl
     #             x['disabled'] = False
 
     if location_main_title == 'X-Axis':
-        return barOptions
+        return barOptions, ''
     else:
-        return [allOptions[0], allOptions[1]]
+        return [allOptions[0], allOptions[1]], ''
 
 
 # First options for all, map, bar
