@@ -7,6 +7,7 @@ import numpy as np
 import dash_daq as daq
 import plotly.graph_objs as go
 from numpy.compat import basestring
+from scipy.spatial import distance
 
 df = pd.read_csv("kiva_loans.csv")
 df["Date"] = pd.to_datetime(df["posted_time"], format="%Y-%m-%d")
@@ -63,6 +64,8 @@ while i < len(df_tweets['country']):
 #    df.at[i, 'borrower_genders'] = final_gender
 
 nominalOptions = ['sector', 'activity', 'repayment_interval', 'borrower_genders']
+numericalOptions = ['loan_amount', 'lender_count', 'funded_amount', 'term_in_months']
+
 allOptions = [{"label": "Country", "value": 'country', "disabled": False},
               {"label": "Region", "value": 'region', "disabled": False},
               {"label": "Loans", "value": 'loan_amount', "disabled": False},
@@ -961,8 +964,23 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
 
     options = [top_label, bottom_label]
 
+    # trying recommendations
+    country = "China"
+    mask = (df.country == country)
+    countryData = df.loc[mask, :]
+    allData = df
+    for x in nominalOptions:
+        for y in numericalOptions:
+            print(x)
+            print(y)
+            mergedlist = pd.merge(pd.DataFrame(df[x].astype(str).unique(), columns = [x]), countryData.groupby(x).mean() , on=x,how='left')
+            print(distance.euclidean(mergedlist.groupby(x)[y].mean().fillna(0).tolist() , allData.groupby(x)[y].mean().tolist()))
+
+
+
     return fig, bar_chart, options
 
 
 if __name__ == "__main__":
     app.run_server(debug=True)
+
