@@ -327,7 +327,7 @@ app.layout = html.Div(
                         html.Div(children="Select Country", className="menu-title"),
                         dcc.Dropdown(id="slct_country", options=[{'label': c, 'value': c} for c in
                                                                  np.sort(filtered_data['country'].astype(str).unique())],
-                                     multi=False,
+                                     multi=True,
                                      value='',
                                      clearable=True,
                                      className="dropdown",
@@ -339,13 +339,11 @@ app.layout = html.Div(
                 html.Div(
                     children=[
                         html.Div(children="Recommendation Number", className="menu-title"),
-                        daq.NumericInput(id='slct_nrecom',
+                              dcc.Slider(1, 5, 1,
                                          value=1,
-                                         size='256px',
-                                         disabled=True,
-                                         min=1
-
+                                         id='slct_nrecom'
                                          ),
+                              html.Div(id='slider-output-container'),
                     ],
                 ),
             ],
@@ -761,14 +759,11 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
     nominalOptions = ['sector', 'activity', 'repayment_interval']  # I removed gender for now bc it's slow
 
     ### To do list ###
-    # filter data based on multi countries
-    # spinner
     # population and tweets?
-    # set max for slect_recom
 
     if slct_country:
-        mask = (df.country == slct_country)
-        countryData = df.loc[mask, :]
+        countryData = (df[(df['country'].isin(slct_country))])
+        print(countryData)
         allData = df
         recomList = []
         recomListDistance = []
@@ -783,10 +778,6 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
                     mergedlist = pd.merge(pd.DataFrame(df[x].astype(str).unique(), columns=[x]),
                                           countryData.groupby(x).aggregate(z),
                                           on=x, how='left')
-                    #print('hi', mergedlist.groupby(x)[y].aggregate(z).fillna(0).tolist())
-
-                    #print(distance.euclidean(mergedlist.groupby(x)[y].aggregate(z).fillna(0).tolist(),
-                    #                         allData.groupby(x)[y].aggregate(z).tolist()))
                     disEuc = distance.euclidean(mergedlist.groupby(x)[y].aggregate(z).fillna(0).tolist(),
                                                 allData.groupby(x)[y].aggregate(z).tolist())
                     recomListDistance.append(disEuc)
@@ -810,7 +801,7 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
         slct_find = maxList_x_y_z[slct_nrecom - 1][1]
         slct_aggregation = maxList_x_y_z[slct_nrecom - 1][2]
         slct_specificfind_nominal = 'country'
-        slct_specificfind = [slct_country]
+        slct_specificfind = slct_country
 
     mask = ((df.Date >= start_date)
             & (df.Date <= end_date) & (df.country != 'None'))
