@@ -745,8 +745,6 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
 
     ### To do list ###
     # filter data based on multi countries
-    # remove none from countries
-    # x-axis name for bar
     # spinner
     # population and tweets?
     # set max for slect_recom
