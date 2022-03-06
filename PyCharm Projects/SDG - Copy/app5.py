@@ -1,3 +1,5 @@
+import heapq
+
 import dash
 from dash import dcc, callback_context
 from dash import html
@@ -47,21 +49,21 @@ while i < len(df_tweets['country']):
 
 # genders row
 # for i in range(len(df.borrower_genders)):
-#    final_gender = ''
-#    list_of_gender = df['borrower_genders'][i]
-#    if type(list_of_gender) != str:
-#        final_gender = 'Not answered'
-#    else:
-#        unique = len(pd.unique((list_of_gender.split(', '))))
-#        if unique == 2:
-#            final_gender = 'Both'
-#        elif unique == 1:
-#            if list_of_gender[0] == 'f':
-#                final_gender = 'Female'
-#            else:
-#                final_gender = 'Male'
+#     final_gender = ''
+#     list_of_gender = df['borrower_genders'][i]
+#     if type(list_of_gender) != str:
+#         final_gender = 'Not answered'
+#     else:
+#         unique = len(pd.unique((list_of_gender.split(', '))))
+#         if unique == 2:
+#             final_gender = 'Both'
+#         elif unique == 1:
+#             if list_of_gender[0] == 'f':
+#                 final_gender = 'Female'
+#             else:
+#                 final_gender = 'Male'
 #
-#    df.at[i, 'borrower_genders'] = final_gender
+#     df.at[i, 'borrower_genders'] = final_gender
 
 nominalOptions = ['sector', 'activity', 'repayment_interval', 'borrower_genders']
 numericalOptions = ['loan_amount', 'lender_count', 'funded_amount', 'term_in_months']
@@ -300,6 +302,49 @@ app.layout = html.Div(
             ],
             className="menu",
         ),
+
+        html.Br(),
+        html.Br(),
+        html.Div(
+            children=[
+                html.H2("Recommendation Options",
+                        style={'text-align': 'center', 'color': 'grey', 'fontSize': 18, 'marginBottom': '15px',
+                               'marginLeft': '5px'}),
+            ],
+            className="menu",
+        ),
+
+        html.Div(
+            children=[
+                html.Div(
+                    children=[
+                        html.Div(children="Select Country", className="menu-title"),
+                        dcc.Dropdown(id="slct_country", options=[{'label': c, 'value': c} for c in
+                                                                 np.sort(df['country'].astype(str).unique())],
+                                     multi=False,
+                                     value='',
+                                     clearable=True,
+                                     className="dropdown",
+                                     disabled=True
+
+                                     ),
+                    ]
+                ),
+                html.Div(
+                    children=[
+                        html.Div(children="Recommendations Number", className="menu-title"),
+                        daq.NumericInput(id='slct_nrecom',
+                                         value=3,
+                                         size='256px',
+                                         disabled=True,
+                                         min=1
+
+                                         ),
+                    ],
+                ),
+            ],
+            className="menu",
+        ),
         html.Div(
             children=[
                 html.Div(
@@ -325,7 +370,10 @@ app.layout = html.Div(
      Output('location-subtitle', 'children'),
      Output('measure-title', 'children'),
      Output('slct_location', 'value'),
-     Output('slct_find', 'value')
+     Output('slct_find', 'value'),
+     Output('slct_country', 'value'),
+     Output('slct_country', 'disabled'),
+     Output('slct_nrecom', 'disabled')
      ],
     [Input('display_bar', 'n_clicks'),
      Input('display_map', 'n_clicks'),
@@ -333,9 +381,9 @@ app.layout = html.Div(
 def set_find_options(display_bar, display_map, display_all):
     changed_id = [p['prop_id'] for p in callback_context.triggered][0]
     if 'display_bar' in changed_id:
-        return 'X-Axis', 'Specify X-Axis', 'Y-Axis', 'country', 'loan_amount'
+        return 'X-Axis', 'Specify X-Axis', 'Y-Axis', 'country', 'loan_amount', '', False, False
     else:
-        return 'Location', 'Specify Location', 'Measure', 'country', 'loan_amount'
+        return 'Location', 'Specify Location', 'Measure', 'country', 'loan_amount', '', True, True
 
 
 @app.callback(
@@ -678,6 +726,8 @@ def set_find_options(display_bar, display_map, display_all):
      Input(component_id="display_all", component_property="n_clicks"),
      Input(component_id="display_map", component_property="n_clicks"),
      Input(component_id="display_bar", component_property="n_clicks"),
+     Input(component_id='slct_country', component_property='value'),
+     Input(component_id='slct_nrecom', component_property='value'),
 
      ],
     [State("slct_find", "options"),
@@ -688,7 +738,61 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
                  slct_nvalue,
                  slct_aggregation,
                  slct_specificfind, slct_specificfind_nominal, start_date, end_date, map_style,
-                 display_all, display_map, display_bar, options, aggoptions):
+                 display_all, display_map, display_bar, slct_country, slct_nrecom, options, aggoptions):
+    # trying recommendations
+    nominalOptions = ['sector', 'activity', 'repayment_interval']  # I removed gender for now bc it's slow
+
+    ### To do list ###
+    # filter data based on multi countries
+    # remove none from countries
+    # x-axis name for bar
+    # spinner
+    # population and tweets?
+
+    if slct_country:
+        mask = (df.country == slct_country)
+        countryData = df.loc[mask, :]
+        allData = df
+        recomList = []
+        recomListDistance = []
+        agg = ['sum', 'count', 'mean']
+        for x in nominalOptions:
+            for y in numericalOptions:
+                for z in agg:
+                    print(x)
+                    print(y)
+                    print(z)
+
+                    mergedlist = pd.merge(pd.DataFrame(df[x].astype(str).unique(), columns=[x]),
+                                          countryData.groupby(x).aggregate(z),
+                                          on=x, how='left')
+                    print('hi', mergedlist.groupby(x)[y].aggregate(z).fillna(0).tolist())
+
+                    print(distance.euclidean(mergedlist.groupby(x)[y].aggregate(z).fillna(0).tolist(),
+                                             allData.groupby(x)[y].aggregate(z).tolist()))
+                    disEuc = distance.euclidean(mergedlist.groupby(x)[y].aggregate(z).fillna(0).tolist(),
+                                                allData.groupby(x)[y].aggregate(z).tolist())
+                    recomListDistance.append(disEuc)
+
+                    recomList.append([x, y, z, disEuc])
+
+        max2 = heapq.nlargest(slct_nrecom, recomListDistance)
+        print(max2)
+        maxList_x_y_z = []
+        for value in max2:
+            max_index = recomListDistance.index(value)
+            max_x_y_z = recomList[max_index]
+            maxList_x_y_z.append(max_x_y_z)
+            print(max_x_y_z)
+
+        print(maxList_x_y_z)
+
+        # show the result based on number of recom
+        slct_location = maxList_x_y_z[slct_nrecom - 1][0]
+        slct_find = maxList_x_y_z[slct_nrecom - 1][1]
+        slct_aggregation = maxList_x_y_z[slct_nrecom - 1][2]
+        slct_specificfind = slct_country
+
     mask = ((df.Date >= start_date)
             & (df.Date <= end_date) & (df.country != 'None'))
     filtered_data = df.loc[mask, :]
@@ -961,23 +1065,8 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
 
     options = [top_label, bottom_label]
 
-    # trying recommendations
-    country = "China"
-    mask = (df.country == country)
-    countryData = df.loc[mask, :]
-    allData = df
-    for x in nominalOptions:
-        for y in numericalOptions:
-            print(x)
-            print(y)
-            mergedlist = pd.merge(pd.DataFrame(df[x].astype(str).unique(), columns = [x]), countryData.groupby(x).mean() , on=x,how='left')
-            print(distance.euclidean(mergedlist.groupby(x)[y].mean().fillna(0).tolist() , allData.groupby(x)[y].mean().tolist()))
-
-
-
     return fig, bar_chart, options
 
 
 if __name__ == "__main__":
     app.run_server(debug=True)
-
