@@ -339,7 +339,7 @@ app.layout = html.Div(
                     children=[
                         html.Div(children="Recommendation Number", className="menu-title"),
                         daq.NumericInput(id='slct_nrecom',
-                                         value=3,
+                                         value=1,
                                          size='256px',
                                          disabled=True,
                                          min=1
@@ -772,17 +772,17 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
         for x in nominalOptions:
             for y in numericalOptions:
                 for z in agg:
-                    print(x)
-                    print(y)
-                    print(z)
+                    #print(x)
+                    #print(y)
+                    #print(z)
 
                     mergedlist = pd.merge(pd.DataFrame(df[x].astype(str).unique(), columns=[x]),
                                           countryData.groupby(x).aggregate(z),
                                           on=x, how='left')
-                    print('hi', mergedlist.groupby(x)[y].aggregate(z).fillna(0).tolist())
+                    #print('hi', mergedlist.groupby(x)[y].aggregate(z).fillna(0).tolist())
 
-                    print(distance.euclidean(mergedlist.groupby(x)[y].aggregate(z).fillna(0).tolist(),
-                                             allData.groupby(x)[y].aggregate(z).tolist()))
+                    #print(distance.euclidean(mergedlist.groupby(x)[y].aggregate(z).fillna(0).tolist(),
+                    #                         allData.groupby(x)[y].aggregate(z).tolist()))
                     disEuc = distance.euclidean(mergedlist.groupby(x)[y].aggregate(z).fillna(0).tolist(),
                                                 allData.groupby(x)[y].aggregate(z).tolist())
                     recomListDistance.append(disEuc)
@@ -790,13 +790,14 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
                     recomList.append([x, y, z, disEuc])
 
         max2 = heapq.nlargest(slct_nrecom, recomListDistance)
-        print(max2)
+
+        #print(max2)
         maxList_x_y_z = []
         for value in max2:
             max_index = recomListDistance.index(value)
             max_x_y_z = recomList[max_index]
             maxList_x_y_z.append(max_x_y_z)
-            print(max_x_y_z)
+            #print(max_x_y_z)
 
         print(maxList_x_y_z)
 
