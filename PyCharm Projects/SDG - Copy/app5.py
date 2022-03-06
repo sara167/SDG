@@ -373,8 +373,7 @@ app.layout = html.Div(
      Output('slct_location', 'value'),
      Output('slct_find', 'value'),
      Output('slct_country', 'value'),
-     Output('slct_country', 'disabled'),
-     Output('slct_nrecom', 'disabled')
+     Output('slct_country', 'disabled')
      ],
     [Input('display_bar', 'n_clicks'),
      Input('display_map', 'n_clicks'),
@@ -382,9 +381,17 @@ app.layout = html.Div(
 def set_find_options(display_bar, display_map, display_all):
     changed_id = [p['prop_id'] for p in callback_context.triggered][0]
     if 'display_bar' in changed_id:
-        return 'X-Axis', 'Specify X-Axis', 'Y-Axis', 'country', 'loan_amount', '', False, False
+        return 'X-Axis', 'Specify X-Axis', 'Y-Axis', 'country', 'loan_amount', '', False
     else:
-        return 'Location', 'Specify Location', 'Measure', 'country', 'loan_amount', '', True, True
+        return 'Location', 'Specify Location', 'Measure', 'country', 'loan_amount', '', True
+
+@app.callback(
+    Output('slct_nrecom', 'disabled'),
+    Input('slct_country', 'value'))
+def set_nrecom(slct_country):
+    if slct_country:
+        return False
+    return True
 
 
 @app.callback(
@@ -748,7 +755,7 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
     # spinner
     # population and tweets?
     # set max for slect_recom
-    # disable slct_recom when slect_country is empty
+    # disable slect_recom when slect_country is empty
 
     if slct_country:
         mask = (df.country == slct_country)
