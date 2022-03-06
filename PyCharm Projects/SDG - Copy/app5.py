@@ -332,7 +332,7 @@ app.layout = html.Div(
                 ),
                 html.Div(
                     children=[
-                        html.Div(children="Recommendations Number", className="menu-title"),
+                        html.Div(children="Recommendation Number", className="menu-title"),
                         daq.NumericInput(id='slct_nrecom',
                                          value=3,
                                          size='256px',
