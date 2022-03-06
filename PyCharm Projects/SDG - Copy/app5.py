@@ -24,7 +24,8 @@ df_tweets = pd.read_csv("Final_Data1.csv")
 newCountry = list(set(df_extreme['country']).intersection(df['country'], df_tweets['country']))
 # print(newCountry)
 # print(len(newCountry))
-
+mask = ((df.country != 'None'))
+filtered_data = df.loc[mask, :]
 
 i = 0
 while i < len(df['country']):
@@ -320,7 +321,7 @@ app.layout = html.Div(
                     children=[
                         html.Div(children="Select Country", className="menu-title"),
                         dcc.Dropdown(id="slct_country", options=[{'label': c, 'value': c} for c in
-                                                                 np.sort(df['country'].astype(str).unique())],
+                                                                 np.sort(filtered_data['country'].astype(str).unique())],
                                      multi=False,
                                      value='',
                                      clearable=True,
@@ -711,7 +712,6 @@ def set_find_options(display_bar, display_map, display_all):
      Output(component_id='slct_sorting', component_property='options'), ],
 
     [Input(component_id='slct_location', component_property='value'),
-     Input(component_id='slct_location', component_property='options'),
      Input(component_id='slct_find', component_property='value'),
      Input(component_id='slct_specificlocation', component_property='value'),
      Input(component_id='slct_sorting', component_property='value'),
@@ -731,14 +731,15 @@ def set_find_options(display_bar, display_map, display_all):
 
      ],
     [State("slct_find", "options"),
-     State("slct_aggregation", "options")]
+     State("slct_aggregation", "options"),
+     State("slct_location", "options")]
 
 )
-def update_graph(slct_location, slct_location_options, slct_find, slct_specificlocation, slct_sorting, slct_order,
+def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, slct_order,
                  slct_nvalue,
                  slct_aggregation,
                  slct_specificfind, slct_specificfind_nominal, start_date, end_date, map_style,
-                 display_all, display_map, display_bar, slct_country, slct_nrecom, options, aggoptions):
+                 display_all, display_map, display_bar, slct_country, slct_nrecom, options, aggoptions, slct_location_options):
     # trying recommendations
     nominalOptions = ['sector', 'activity', 'repayment_interval']  # I removed gender for now bc it's slow
 
@@ -972,9 +973,9 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
                   {"label": "Count", "value": 'count'},
                   {"label": "Average", "value": 'mean'}]
 
+    x_label = [x['label'] for x in slct_location_options if x['value'] == slct_location]
     if yAxisNum == 1:
 
-        # the_label = [x['label'] for x in options if x['value'] == slct_find]
 
         for x in aggoptions:
 
@@ -1032,6 +1033,7 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
             go.Bar(
                 x=TestFinal[0].index,
                 y=TestFinal[0].values,
+
                 marker={'color': TestFinal[0].values,
                         'colorscale': color})
         ],
@@ -1062,6 +1064,7 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
                 'yaxis2': {'title': the_label[1], 'overlaying': 'y', 'side': 'right'}
             }
         )
+    bar_chart.update_layout(xaxis_title=x_label[0])
 
     top_label = {"label": "Top", "value": 'Top'}
     bottom_label = {"label": "Bottom", "value": 'Bottom'}
