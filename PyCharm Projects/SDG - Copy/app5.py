@@ -761,7 +761,6 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
     # spinner
     # population and tweets?
     # set max for slect_recom
-    # disable slect_recom when slect_country is empty
 
     if slct_country:
         mask = (df.country == slct_country)
