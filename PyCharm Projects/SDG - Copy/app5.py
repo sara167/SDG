@@ -24,8 +24,6 @@ df_tweets = pd.read_csv("Final_Data1.csv")
 newCountry = list(set(df_extreme['country']).intersection(df['country'], df_tweets['country']))
 # print(newCountry)
 # print(len(newCountry))
-mask = ((df.country != 'None'))
-filtered_data = df.loc[mask, :]
 
 i = 0
 while i < len(df['country']):
@@ -47,6 +45,9 @@ while i < len(df_tweets['country']):
     if df_tweets['country'][i] not in newCountry:
         df_tweets.at[i, 'country'] = 'None'
     i = i + 1
+
+mask = ((df.country != 'None'))
+filtered_data = df.loc[mask, :]
 
 # genders row
 # for i in range(len(df.borrower_genders)):
@@ -624,9 +625,12 @@ def set_location_options(slct_location):
 
 )
 def set_find_options(slct_find, slct_specificfind_nominal):
+    mask = ((df.country != 'None'))
+    filtered_data = df.loc[mask, :]
+
     if len(slct_specificfind_nominal) == 4:
         if slct_find in nominalOptions or slct_find == 'Year':
-            return [{'label': c, 'value': c} for c in np.sort(df[slct_find].astype(str).unique())]
+            return [{'label': c, 'value': c} for c in np.sort(filtered_data[slct_find].astype(str).unique())]
         else:
             return []
 
@@ -635,7 +639,7 @@ def set_find_options(slct_find, slct_specificfind_nominal):
             return [{'label': c, 'value': c} for c in np.sort(df_tweets[slct_find].astype(str).unique())]
 
         elif slct_find in nominalOptions or slct_find == 'Year' or slct_find == 'country' or slct_find == 'region':
-            return [{'label': c, 'value': c} for c in np.sort(df[slct_find].astype(str).unique())]
+            return [{'label': c, 'value': c} for c in np.sort(filtered_data[slct_find].astype(str).unique())]
         else:
             return []
 
