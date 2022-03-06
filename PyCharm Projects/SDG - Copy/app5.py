@@ -748,6 +748,8 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
     # x-axis name for bar
     # spinner
     # population and tweets?
+    # set max for slect_recom
+    # disable slct_recom when slect_country is empty
 
     if slct_country:
         mask = (df.country == slct_country)
@@ -791,7 +793,8 @@ def update_graph(slct_location, slct_location_options, slct_find, slct_specificl
         slct_location = maxList_x_y_z[slct_nrecom - 1][0]
         slct_find = maxList_x_y_z[slct_nrecom - 1][1]
         slct_aggregation = maxList_x_y_z[slct_nrecom - 1][2]
-        slct_specificfind = slct_country
+        slct_specificfind_nominal = 'country'
+        slct_specificfind = [slct_country]
 
     mask = ((df.Date >= start_date)
             & (df.Date <= end_date) & (df.country != 'None'))
