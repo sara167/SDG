@@ -150,3 +150,22 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
+
+@keyframes fadein {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 0.5;
+    }
+}
+
+.dash-spinner {
+  background-image: url("https://i.stack.imgur.com/kOnzy.gif");
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+.dash-spinner * {
+  display: none !important;
+}

@@ -123,6 +123,10 @@ app.layout = html.Div(
             className="header",
         ),
 
+        dcc.Loading(
+            id="loading-1", type="default", children=html.Div(id="loading-output-1")
+        ),
+
         html.Div(
             children=[
                 html.H2("Visualization Options",
@@ -716,7 +720,9 @@ def set_find_options(display_bar, display_map, display_all):
 @app.callback(
     [Output(component_id='map', component_property='figure'),
      Output(component_id='bar', component_property='figure'),
-     Output(component_id='slct_sorting', component_property='options'), ],
+     Output(component_id='slct_sorting', component_property='options'),
+     Output("loading-output-1", "children"),
+     ],
 
     [Input(component_id='slct_location', component_property='value'),
      Input(component_id='slct_find', component_property='value'),
@@ -1076,7 +1082,7 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
 
     options = [top_label, bottom_label]
 
-    return fig, bar_chart, options
+    return fig, bar_chart, options, None
 
 
 if __name__ == "__main__":
