@@ -13,7 +13,6 @@ from numpy.compat import basestring
 from scipy.spatial import distance
 from sklearn import preprocessing
 
-
 df = pd.read_csv("kiva_loans.csv")
 df["Date"] = pd.to_datetime(df["posted_time"], format="%Y-%m-%d")
 df.sort_values("Date", inplace=True)
@@ -336,7 +335,7 @@ app.layout = html.Div(
                                                                {"label": "Gender", "value": 'borrower_genders'},
                                                                {"label": "Repayment Interval",
                                                                 "value": 'repayment_interval'},
-],
+                                                               ],
                                      multi=False,
                                      value='',
                                      clearable=True,
@@ -426,6 +425,7 @@ def set_country(slct_scope):
     if slct_scope:
         return False
     return True
+
 
 @app.callback(
     Output('slct_nrecom', 'disabled'),
@@ -653,6 +653,7 @@ def set_location_options(slct_location):
     else:
         return []
 
+
 @app.callback(
     Output('slct_country', 'options'),
     Input('slct_scope', 'value')
@@ -666,6 +667,8 @@ def set_scope_options(slct_scope):
         return [{'label': c, 'value': c} for c in np.sort(filtered_data[slct_scope].astype(str).unique())]
     else:
         return []
+
+
 # Show nominal values list of items e.g. Sector: Agriculture, Arts, ...
 @app.callback(
     Output('slct_specificfind', 'options'),
@@ -810,7 +813,6 @@ def set_display_recom_graph(slct_country):
      Input(component_id='slct_scope', component_property='value'),
      Input(component_id='slct_scope', component_property='options'),
 
-
      ],
     [State("slct_find", "options"),
      State("slct_aggregation", "options"),
@@ -821,11 +823,11 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
                  slct_nvalue,
                  slct_aggregation,
                  slct_specificfind, slct_specificfind_nominal, start_date, end_date, map_style,
-                 display_all, display_map, display_bar, slct_country, slct_nrecom, slct_scope, slct_scope_options, options, aggoptions,
+                 display_all, display_map, display_bar, slct_country, slct_nrecom, slct_scope, slct_scope_options,
+                 options, aggoptions,
                  slct_location_options):
     # trying recommendations
     nominalOptions = ['sector', 'activity', 'repayment_interval']  # I removed gender for now bc it's slow
-
     ### To do list ###
     # population and tweets?
 
@@ -833,26 +835,26 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
         countryData = (df[(df['country'].isin(slct_country))])
         allData = df
         recomList = []
+        print('ayooo')
         recomListDistance = []
         agg = ['sum', 'count', 'mean']
         for x in nominalOptions:
             for y in numericalOptions:
                 for z in agg:
-
-                    print(y)
+                    print(x, y, z)
                     mergedlist = pd.merge(pd.DataFrame(df[x].astype(str).unique(), columns=[x]),
                                           countryData.groupby(x).aggregate(z),
                                           on=x, how='left')
 
                     mergedlist[y] = mergedlist[y].fillna(0)
-                    mergedlist[y] = preprocessing.normalize(np.array([mergedlist[y]]).reshape(1, -1)).reshape(-1,1)
+                    mergedlist[y] = preprocessing.normalize(np.array([mergedlist[y]]).reshape(1, -1)).reshape(-1, 1)
 
-                    allData[y] = preprocessing.normalize(np.array([allData[y]]).reshape(1, -1)).reshape(-1,1)
+                    allData[y] = preprocessing.normalize(np.array([allData[y]]).reshape(1, -1)).reshape(-1, 1)
 
                     disEuc = distance.euclidean(mergedlist.groupby(x)[y].aggregate(z).tolist(),
                                                 allData.groupby(x)[y].aggregate(z).tolist())
+                    print(disEuc)
                     recomListDistance.append(disEuc)
-
                     recomList.append([x, y, z, disEuc])
 
         maxRecom = heapq.nlargest(slct_nrecom, recomListDistance)
@@ -861,11 +863,13 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
         maxList_x_y_z = []
         for value in maxRecom:
             max_index = recomListDistance.index(value)
+            recomListDistance.pop(max_index)
             max_x_y_z = recomList[max_index]
+            recomList.pop(max_index)
             maxList_x_y_z.append(max_x_y_z)
             # print(max_x_y_z)
 
-        print(maxList_x_y_z)
+        # print(maxList_x_y_z)
 
         # show the result based on number of recom
         slct_location = maxList_x_y_z[slct_nrecom - 1][0]
@@ -891,6 +895,10 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
 
     elif slct_specificfind and slct_specificfind_nominal:  # there are specific y values
         Test = (Test[(Test[slct_specificfind_nominal].isin(slct_specificfind))])
+
+    mask = ((df.country != 'None'))
+    ref_filtered_data = df.loc[mask, :]
+    refTest = ref_filtered_data
 
     yAxisNum = 1
     # if len(slct_location_options) > 2:
@@ -924,6 +932,9 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
                         ascending=ascending)
                 else:
                     TestFinal[0] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find].sort_values(
+                        ascending=ascending)
+                    # referance
+                    refTest = refTest.groupby(slct_location).aggregate(slct_aggregation)[slct_find].sort_values(
                         ascending=ascending)
             else:
                 while i < yAxisNum:
@@ -1058,9 +1069,7 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
     scope_label = [s['label'] for s in slct_scope_options if s['value'] == slct_scope]
 
     if yAxisNum == 1:
-
         for x in aggoptions:
-
             if x['value'] == slct_aggregation and slct_find == 'population_below_poverty':
                 the_label1 = 'Average'
             elif x['value'] == slct_aggregation:
@@ -1139,10 +1148,7 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
 
     if slct_country:
         if scope_label[0][-1] == 'y':
-            print('before', temp_scope_label[0])
             temp_scope_label[0] = scope_label[0][:-1]
-            print('After', temp_scope_label[0])
-
             end = 'ies'
         else:
             end = 's'
@@ -1159,7 +1165,7 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
                 else:
                     displayCountry = displayCountry + x + ', '
 
-               # vistitle = the_label[0] + ' in All ' + temp_x_label[0] + end
+            # vistitle = the_label[0] + ' in All ' + temp_x_label[0] + end
 
         vistitle = 'Recommendation Number ' + str(slct_nrecom) + ': ' + the_label[0] + ' in ' + x_label[
             0] + ' by ' + displayCountry
@@ -1213,10 +1219,10 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
         )
         bar_chart_recom = go.FigureWidget(data=[
             go.Bar(
-                x=TestFinal[0].index,
-                y=TestFinal[0].values,
+                x=refTest.index,
+                y=refTest.values,
 
-                marker={'color': TestFinal[0].values,
+                marker={'color': refTest.values,
                         'colorscale': color})
         ],
             layout=go.Layout(
