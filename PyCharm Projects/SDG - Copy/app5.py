@@ -334,7 +334,7 @@ app.layout = html.Div(
                                                                {"label": "Gender", "value": 'borrower_genders'},
                                                                {"label": "Repayment Interval",
                                                                 "value": 'repayment_interval'},
-                                                               {"label": "Tweets", "value": 'Keyword'}],
+],
                                      multi=False,
                                      value='',
                                      clearable=True,
@@ -660,8 +660,7 @@ def set_scope_options(slct_scope):
     mask = ((df.country != 'None'))
 
     filtered_data = df.loc[mask, :]
-    if slct_scope in nominalOptions or slct_scope == 'country' or slct_scope == 'region' or slct_scope == 'Year' \
-            or slct_scope == 'Keyword':
+    if slct_scope in nominalOptions or slct_scope == 'country' or slct_scope == 'region' or slct_scope == 'Year':
         return [{'label': c, 'value': c} for c in np.sort(filtered_data[slct_scope].astype(str).unique())]
     else:
         return []
@@ -806,6 +805,9 @@ def set_display_recom_graph(slct_country):
      Input(component_id="display_bar", component_property="n_clicks"),
      Input(component_id='slct_country', component_property='value'),
      Input(component_id='slct_nrecom', component_property='value'),
+     Input(component_id='slct_scope', component_property='value'),
+     Input(component_id='slct_scope', component_property='options'),
+
 
      ],
     [State("slct_find", "options"),
@@ -817,7 +819,7 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
                  slct_nvalue,
                  slct_aggregation,
                  slct_specificfind, slct_specificfind_nominal, start_date, end_date, map_style,
-                 display_all, display_map, display_bar, slct_country, slct_nrecom, options, aggoptions,
+                 display_all, display_map, display_bar, slct_country, slct_nrecom, slct_scope, slct_scope_options, options, aggoptions,
                  slct_location_options):
     # trying recommendations
     nominalOptions = ['sector', 'activity', 'repayment_interval']  # I removed gender for now bc it's slow
@@ -864,7 +866,7 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
         slct_location = maxList_x_y_z[slct_nrecom - 1][0]
         slct_find = maxList_x_y_z[slct_nrecom - 1][1]
         slct_aggregation = maxList_x_y_z[slct_nrecom - 1][2]
-        slct_specificfind_nominal = 'country'
+        slct_specificfind_nominal = slct_scope
         slct_specificfind = slct_country
 
     mask = ((df.Date >= start_date)
@@ -1048,6 +1050,8 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
                   {"label": "Average", "value": 'mean'}]
 
     x_label = [x['label'] for x in slct_location_options if x['value'] == slct_location]
+    scope_label = [s['label'] for s in slct_scope_options if s['value'] == slct_scope]
+
     if yAxisNum == 1:
 
         for x in aggoptions:
@@ -1084,6 +1088,10 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
 
     temp_x_label = ['']
     temp_x_label[0] = x_label[0]
+    if scope_label:
+        temp_scope_label = ['']
+        temp_scope_label[0] = scope_label[0]
+
     vistitle_ref = 'Reference'
     if slct_specificlocation:
         display_specificlocation = slct_specificlocation[0]
@@ -1125,6 +1133,15 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
         vistitle = the_label[0] + ' by ' + display_specificfind + ' in All ' + temp_x_label[0] + end
 
     if slct_country:
+        if scope_label[0][-1] == 'y':
+            print('before', temp_scope_label[0])
+            temp_scope_label[0] = scope_label[0][:-1]
+            print('After', temp_scope_label[0])
+
+            end = 'ies'
+        else:
+            end = 's'
+
         displayCountry = slct_country[0]
         if len(slct_country) > 1:
             displayCountry = ''
@@ -1137,17 +1154,12 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
                 else:
                     displayCountry = displayCountry + x + ', '
 
-            if x_label[0][-1] == 'y':
-                temp_x_label[0] = x_label[0][:-1]
-                end = 'ies'
-            else:
-                end = 's'
-            # vistitle = the_label[0] + ' in All ' + temp_x_label[0] + end
+               # vistitle = the_label[0] + ' in All ' + temp_x_label[0] + end
 
         vistitle = 'Recommendation Number ' + str(slct_nrecom) + ': ' + the_label[0] + ' in ' + x_label[
             0] + ' by ' + displayCountry
         vistitle_ref = 'Reference for Recommendation Number ' + str(slct_nrecom) + ' : ' + the_label[0] + ' in ' + \
-                       x_label[0] + ' by ' + temp_x_label[0] + end
+                       x_label[0] + ' by All ' + temp_scope_label[0] + end
 
     data = [dict(
         type='choropleth',
