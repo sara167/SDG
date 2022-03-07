@@ -1,4 +1,5 @@
 import heapq
+import textwrap
 
 import dash
 from dash import dcc, callback_context
@@ -324,9 +325,29 @@ app.layout = html.Div(
             children=[
                 html.Div(
                     children=[
-                        html.Div(children="Select Country", className="menu-title"),
-                        dcc.Dropdown(id="slct_country", options=[{'label': c, 'value': c} for c in
-                                                                 np.sort(filtered_data['country'].astype(str).unique())],
+                        html.Div(children="Scope", className="menu-title"),
+                        dcc.Dropdown(id="slct_scope", options=[{"label": "Country", "value": 'country'},
+                                                               {"label": "Region", "value": 'region'},
+                                                               {"label": "Year", "value": 'Year'},
+                                                               {"label": "Sector", "value": 'sector'},
+                                                               {"label": "Activity", "value": 'activity'},
+                                                               {"label": "Gender", "value": 'borrower_genders'},
+                                                               {"label": "Repayment Interval",
+                                                                "value": 'repayment_interval'},
+                                                               {"label": "Tweets", "value": 'Keyword'}],
+                                     multi=False,
+                                     value='',
+                                     clearable=True,
+                                     className="dropdown",
+                                     disabled=False
+
+                                     ),
+                    ]
+                ),
+                html.Div(
+                    children=[
+                        html.Div(children="Specify Scope ", className="menu-title"),
+                        dcc.Dropdown(id="slct_country", options=[],
                                      multi=True,
                                      value='',
                                      clearable=True,
@@ -339,11 +360,11 @@ app.layout = html.Div(
                 html.Div(
                     children=[
                         html.Div(children="Recommendation Number", className="menu-title"),
-                              dcc.Slider(1, 5, 1,
-                                         value=1,
-                                         id='slct_nrecom'
-                                         ),
-                              html.Div(id='slider-output-container'),
+                        dcc.Slider(1, 5, 1,
+                                   value=1,
+                                   id='slct_nrecom'
+                                   ),
+                        html.Div(id='slider-output-container'),
                     ],
                 ),
             ],
@@ -361,6 +382,11 @@ app.layout = html.Div(
                     children=dcc.Graph(id='bar', figure={}, ),
                     className='card',
                 ),
+                html.Div(
+                    id='barrec_div',
+                    children=dcc.Graph(id='barrec', figure={}),
+                    className='card',
+                ),
             ],
             className='wrapper',
         ),
@@ -375,8 +401,10 @@ app.layout = html.Div(
      Output('measure-title', 'children'),
      Output('slct_location', 'value'),
      Output('slct_find', 'value'),
+     Output('slct_scope', 'value'),
+     Output('slct_scope', 'disabled'),
      Output('slct_country', 'value'),
-     Output('slct_country', 'disabled')
+
      ],
     [Input('display_bar', 'n_clicks'),
      Input('display_map', 'n_clicks'),
@@ -384,9 +412,18 @@ app.layout = html.Div(
 def set_find_options(display_bar, display_map, display_all):
     changed_id = [p['prop_id'] for p in callback_context.triggered][0]
     if 'display_bar' in changed_id:
-        return 'X-Axis', 'Specify X-Axis', 'Y-Axis', 'country', 'loan_amount', '', False
+        return 'X-Axis', 'Specify X-Axis', 'Y-Axis', 'country', 'loan_amount', '', False, ''
     else:
-        return 'Location', 'Specify Location', 'Measure', 'country', 'loan_amount', '', True
+        return 'Location', 'Specify Location', 'Measure', 'country', 'loan_amount', '', True, ''
+
+
+@app.callback(
+    Output('slct_country', 'disabled'),
+    Input('slct_scope', 'value'))
+def set_country(slct_scope):
+    if slct_scope:
+        return False
+    return True
 
 @app.callback(
     Output('slct_nrecom', 'disabled'),
@@ -614,7 +651,20 @@ def set_location_options(slct_location):
     else:
         return []
 
+@app.callback(
+    Output('slct_country', 'options'),
+    Input('slct_scope', 'value')
+)
+def set_scope_options(slct_scope):
+    print(slct_scope)
+    mask = ((df.country != 'None'))
 
+    filtered_data = df.loc[mask, :]
+    if slct_scope in nominalOptions or slct_scope == 'country' or slct_scope == 'region' or slct_scope == 'Year' \
+            or slct_scope == 'Keyword':
+        return [{'label': c, 'value': c} for c in np.sort(filtered_data[slct_scope].astype(str).unique())]
+    else:
+        return []
 # Show nominal values list of items e.g. Sector: Agriculture, Arts, ...
 @app.callback(
     Output('slct_specificfind', 'options'),
@@ -703,11 +753,12 @@ def set_measure_options(slct_location, slct_find, slct_find_options):
 # hide/show graph e.g. all, bar, map
 @app.callback(
     [Output('bar', 'style'),
-     Output('map', 'style')],
+     Output('map', 'style')
+     ],
     [Input('display_bar', 'n_clicks'),
      Input('display_map', 'n_clicks'),
      Input('display_all', 'n_clicks')])
-def set_find_options(display_bar, display_map, display_all):
+def set_display_graph(display_bar, display_map, display_all):
     changed_id = [p['prop_id'] for p in callback_context.triggered][0]
     if 'display_map' in changed_id:
         return {'display': 'none'}, {}
@@ -720,8 +771,20 @@ def set_find_options(display_bar, display_map, display_all):
 
 
 @app.callback(
+    Output('barrec', 'style'),
+    Input('slct_country', 'value'))
+def set_display_recom_graph(slct_country):
+    if slct_country:
+        print(slct_country)
+        return {}
+    else:
+        return {'display': 'none'}
+
+
+@app.callback(
     [Output(component_id='map', component_property='figure'),
      Output(component_id='bar', component_property='figure'),
+     Output(component_id='barrec', component_property='figure'),
      Output(component_id='slct_sorting', component_property='options'),
      Output("loading-output-1", "children"),
      ],
@@ -754,7 +817,8 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
                  slct_nvalue,
                  slct_aggregation,
                  slct_specificfind, slct_specificfind_nominal, start_date, end_date, map_style,
-                 display_all, display_map, display_bar, slct_country, slct_nrecom, options, aggoptions, slct_location_options):
+                 display_all, display_map, display_bar, slct_country, slct_nrecom, options, aggoptions,
+                 slct_location_options):
     # trying recommendations
     nominalOptions = ['sector', 'activity', 'repayment_interval']  # I removed gender for now bc it's slow
 
@@ -771,9 +835,9 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
         for x in nominalOptions:
             for y in numericalOptions:
                 for z in agg:
-                    #print(x)
-                    #print(y)
-                    #print(z)
+                    # print(x)
+                    # print(y)
+                    # print(z)
 
                     mergedlist = pd.merge(pd.DataFrame(df[x].astype(str).unique(), columns=[x]),
                                           countryData.groupby(x).aggregate(z),
@@ -784,15 +848,15 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
 
                     recomList.append([x, y, z, disEuc])
 
-        max2 = heapq.nlargest(slct_nrecom, recomListDistance)
+        maxRecom = heapq.nlargest(slct_nrecom, recomListDistance)
 
-        #print(max2)
+        # print(maxRecom)
         maxList_x_y_z = []
-        for value in max2:
+        for value in maxRecom:
             max_index = recomListDistance.index(value)
             max_x_y_z = recomList[max_index]
             maxList_x_y_z.append(max_x_y_z)
-            #print(max_x_y_z)
+            # print(max_x_y_z)
 
         print(maxList_x_y_z)
 
@@ -946,9 +1010,13 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
 
 
     else:  ##specific location
-        Test = (Test[(Test[slct_location].isin(slct_specificlocation))])
-        Test2 = (Test2[(Test2[slct_location].isin(slct_specificlocation))])
-        Test3 = (Test3[(Test3[slct_location].isin(slct_specificlocation))])
+        if slct_find != 'population_below_poverty' and slct_find != 'Keyword':
+            Test = (Test[(Test[slct_location].isin(slct_specificlocation))])
+        if slct_find == 'population_below_poverty':
+            Test2 = (Test2[(Test2[slct_location].isin(slct_specificlocation))])
+
+        if slct_find == 'Keyword':
+            Test3 = (Test3[(Test3[slct_location].isin(slct_specificlocation))])
 
         if yAxisNum == 1:
             if slct_location == 'country' and slct_find == 'population_below_poverty':
@@ -982,7 +1050,6 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
     x_label = [x['label'] for x in slct_location_options if x['value'] == slct_location]
     if yAxisNum == 1:
 
-
         for x in aggoptions:
 
             if x['value'] == slct_aggregation and slct_find == 'population_below_poverty':
@@ -1015,6 +1082,73 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
                     the_label[counter] = the_label0 + ' ' + x['label']
                     counter = counter + 1
 
+    temp_x_label = ['']
+    temp_x_label[0] = x_label[0]
+    vistitle_ref = 'Reference'
+    if slct_specificlocation:
+        display_specificlocation = slct_specificlocation[0]
+        if len(slct_specificlocation) > 1:
+            display_specificlocation = ''
+
+            for x in slct_specificlocation:
+                if x == slct_specificlocation[len(slct_specificlocation) - 1]:
+                    display_specificlocation = display_specificlocation + ' & ' + x
+                elif x == slct_specificlocation[len(slct_specificlocation) - 2]:
+                    display_specificlocation = display_specificlocation + x
+                else:
+                    display_specificlocation = display_specificlocation + x + ', '
+
+        vistitle = the_label[0] + ' in ' + display_specificlocation
+    else:
+        if x_label[0][-1] == 'y':
+            temp_x_label[0] = x_label[0][:-1]
+            end = 'ies'
+        else:
+            end = 's'
+        vistitle = the_label[0] + ' in All ' + temp_x_label[0] + end
+    if slct_specificfind:
+        display_specificfind = slct_specificfind[0]
+        if len(slct_specificfind) > 1:
+            display_specificfind = ''
+
+            for x in slct_specificfind:
+                if x == slct_specificfind[len(slct_specificfind) - 1]:
+                    display_specificfind = display_specificfind + ' & ' + x
+                elif x == slct_specificfind[len(slct_specificfind) - 2]:
+                    display_specificfind = display_specificfind + x
+                else:
+                    display_specificfind = display_specificfind + x + ', '
+
+    if slct_specificfind and slct_specificlocation:
+        vistitle = the_label[0] + ' by ' + display_specificfind + ' in ' + display_specificlocation
+    elif slct_specificfind:
+        vistitle = the_label[0] + ' by ' + display_specificfind + ' in All ' + temp_x_label[0] + end
+
+    if slct_country:
+        displayCountry = slct_country[0]
+        if len(slct_country) > 1:
+            displayCountry = ''
+
+            for x in slct_country:
+                if x == slct_country[len(slct_country) - 1]:
+                    displayCountry = displayCountry + ' & ' + x
+                elif x == slct_country[len(slct_country) - 2]:
+                    displayCountry = displayCountry + x
+                else:
+                    displayCountry = displayCountry + x + ', '
+
+            if x_label[0][-1] == 'y':
+                temp_x_label[0] = x_label[0][:-1]
+                end = 'ies'
+            else:
+                end = 's'
+            # vistitle = the_label[0] + ' in All ' + temp_x_label[0] + end
+
+        vistitle = 'Recommendation Number ' + str(slct_nrecom) + ': ' + the_label[0] + ' in ' + x_label[
+            0] + ' by ' + displayCountry
+        vistitle_ref = 'Reference for Recommendation Number ' + str(slct_nrecom) + ' : ' + the_label[0] + ' in ' + \
+                       x_label[0] + ' by ' + temp_x_label[0] + end
+
     data = [dict(
         type='choropleth',
         locations=TestFinal[0].index,
@@ -1023,10 +1157,22 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
         text=TestFinal[0].index,
         colorscale="Viridis",
         reversescale=not ascending,
-        marker=dict(line=dict(width=0.7)),
+        marker=dict(line=dict(width=0.5, color='white')),
+
         colorbar=dict(autotick=False, tickprefix='', title=the_label[0], ),
     )]
-    fig = dict(data=data)
+    layout = dict(
+        title=vistitle,
+        geo=dict(
+            showframe=False,
+            showcoastlines=True,
+            projection_type='Mercator',
+            showocean=True,
+            oceancolor="#E5ECF6",
+        )
+    )
+
+    fig = dict(data=data, layout=layout)
 
     if not ascending:
         color = 'Viridis_r'
@@ -1036,6 +1182,19 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
     # bar chart
     if yAxisNum == 1:
         bar_chart = go.FigureWidget(data=[
+            go.Bar(
+                x=TestFinal[0].index,
+                y=TestFinal[0].values,
+
+                marker={'color': TestFinal[0].values,
+                        'colorscale': color})
+        ],
+
+            layout=go.Layout(
+                yaxis_title=the_label[0]
+            )
+        )
+        bar_chart_recom = go.FigureWidget(data=[
             go.Bar(
                 x=TestFinal[0].index,
                 y=TestFinal[0].values,
@@ -1070,14 +1229,15 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
                 'yaxis2': {'title': the_label[1], 'overlaying': 'y', 'side': 'right'}
             }
         )
-    bar_chart.update_layout(xaxis_title=x_label[0])
+    bar_chart.update_layout(xaxis_title=x_label[0], title=vistitle, title_x=0.5)
+    bar_chart_recom.update_layout(xaxis_title=x_label[0], title=vistitle_ref, title_x=0.5)
 
     top_label = {"label": "Top", "value": 'Top'}
     bottom_label = {"label": "Bottom", "value": 'Bottom'}
 
     options = [top_label, bottom_label]
 
-    return fig, bar_chart, options, None
+    return fig, bar_chart, bar_chart_recom, options, None
 
 
 if __name__ == "__main__":
