@@ -11,6 +11,8 @@ import dash_daq as daq
 import plotly.graph_objs as go
 from numpy.compat import basestring
 from scipy.spatial import distance
+from sklearn import preprocessing
+
 
 df = pd.read_csv("kiva_loans.csv")
 df["Date"] = pd.to_datetime(df["posted_time"], format="%Y-%m-%d")
@@ -829,7 +831,6 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
 
     if slct_country:
         countryData = (df[(df['country'].isin(slct_country))])
-        print(countryData)
         allData = df
         recomList = []
         recomListDistance = []
@@ -837,14 +838,18 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
         for x in nominalOptions:
             for y in numericalOptions:
                 for z in agg:
-                    # print(x)
-                    # print(y)
-                    # print(z)
 
+                    print(y)
                     mergedlist = pd.merge(pd.DataFrame(df[x].astype(str).unique(), columns=[x]),
                                           countryData.groupby(x).aggregate(z),
                                           on=x, how='left')
-                    disEuc = distance.euclidean(mergedlist.groupby(x)[y].aggregate(z).fillna(0).tolist(),
+
+                    mergedlist[y] = mergedlist[y].fillna(0)
+                    mergedlist[y] = preprocessing.normalize(np.array([mergedlist[y]]).reshape(1, -1)).reshape(-1,1)
+
+                    allData[y] = preprocessing.normalize(np.array([allData[y]]).reshape(1, -1)).reshape(-1,1)
+
+                    disEuc = distance.euclidean(mergedlist.groupby(x)[y].aggregate(z).tolist(),
                                                 allData.groupby(x)[y].aggregate(z).tolist())
                     recomListDistance.append(disEuc)
 
