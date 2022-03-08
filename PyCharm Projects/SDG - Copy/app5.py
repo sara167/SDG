@@ -404,7 +404,6 @@ app.layout = html.Div(
      Output('slct_find', 'value'),
      Output('slct_scope', 'value'),
      Output('slct_scope', 'disabled'),
-     Output('slct_country', 'value'),
 
      ],
     [Input('display_bar', 'n_clicks'),
@@ -413,18 +412,19 @@ app.layout = html.Div(
 def set_find_options(display_bar, display_map, display_all):
     changed_id = [p['prop_id'] for p in callback_context.triggered][0]
     if 'display_bar' in changed_id:
-        return 'X-Axis', 'Specify X-Axis', 'Y-Axis', 'country', 'loan_amount', '', False, ''
+        return 'X-Axis', 'Specify X-Axis', 'Y-Axis', 'country', 'loan_amount', '', False
     else:
-        return 'Location', 'Specify Location', 'Measure', 'country', 'loan_amount', '', True, ''
+        return 'Location', 'Specify Location', 'Measure', 'country', 'loan_amount', '', True
 
 
 @app.callback(
     Output('slct_country', 'disabled'),
+    Output('slct_country', 'value'),
     Input('slct_scope', 'value'))
 def set_country(slct_scope):
     if slct_scope:
-        return False
-    return True
+        return False, ''
+    return True, ''
 
 
 @app.callback(
@@ -827,39 +827,108 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
                  options, aggoptions,
                  slct_location_options):
     # trying recommendations
-    nominalOptions = ['sector', 'activity', 'repayment_interval']  # I removed gender for now bc it's slow
-    ### To do list ###
-    # population and tweets?
 
-    if slct_country:
-        countryData = (df[(df['country'].isin(slct_country))])
+
+    nominalOptions = ['sector', 'activity', 'repayment_interval', 'country','Year']  # I removed gender for now bc it's slow
+    ### To do list ###
+    # tweets?
+
+    if slct_country and slct_scope:
+        nominalOptions = ['sector', 'activity', 'repayment_interval', 'country',
+                          'Year']  # I removed gender for now bc it's slow
+
+        if slct_scope == 'country':
+            nominalOptions2 = ['country']
+            numericalOptions2 = ['population_below_poverty']
+
+            numericalOptions3 = ['Keyword']
+
+
+        countryData = (df[(df[slct_scope].isin(slct_country))])
         allData = df
         recomList = []
-        print('ayooo')
         recomListDistance = []
         agg = ['sum', 'count', 'mean']
         for x in nominalOptions:
             for y in numericalOptions:
                 for z in agg:
-                    print(x, y, z)
+                    #print(x, y, z)
                     mergedlist = pd.merge(pd.DataFrame(df[x].astype(str).unique(), columns=[x]),
                                           countryData.groupby(x).aggregate(z),
                                           on=x, how='left')
-
                     mergedlist[y] = mergedlist[y].fillna(0)
+
+                    #print('\nscope before normalization: ',mergedlist[y])
+
                     mergedlist[y] = preprocessing.normalize(np.array([mergedlist[y]]).reshape(1, -1)).reshape(-1, 1)
+
+                    #print('\nscope after normalization:', mergedlist[y])
 
                     allData[y] = preprocessing.normalize(np.array([allData[y]]).reshape(1, -1)).reshape(-1, 1)
 
+                    #print('\nref after normalization:', allData[y])
+
+
+                    #print('\nspecific:',mergedlist.groupby(x)[y].aggregate(z).tolist())
+                    #print('all:',allData.groupby(x)[y].aggregate(z).tolist())
+
+
                     disEuc = distance.euclidean(mergedlist.groupby(x)[y].aggregate(z).tolist(),
-                                                allData.groupby(x)[y].aggregate(z).tolist())
-                    print(disEuc)
+                                               allData.groupby(x)[y].aggregate(z).tolist())
+
+
+                    #print('distance:',disEuc)
                     recomListDistance.append(disEuc)
                     recomList.append([x, y, z, disEuc])
+                    #print(recomList)
+
+
+
+        if slct_scope == 'country':
+            countryData = (df_extreme[(df_extreme[slct_scope].isin(slct_country))])
+            allData = df_extreme
+            mergedlist = pd.merge(pd.DataFrame(df_extreme['country'].astype(str).unique(), columns=['country']),
+                                  countryData.groupby('country').aggregate('mean'),
+                                  on='country', how='left')
+            mergedlist['population_below_poverty'] = mergedlist['population_below_poverty'].fillna(0)
+            mergedlist['population_below_poverty'] = preprocessing.normalize(np.array([mergedlist['population_below_poverty']]).reshape(1, -1)).reshape(-1, 1)
+
+            allData['population_below_poverty'] = preprocessing.normalize(np.array([allData['population_below_poverty']]).reshape(1, -1)).reshape(-1, 1)
+
+            disEuc = distance.euclidean(mergedlist.groupby('country')['population_below_poverty'].aggregate('mean').tolist(),
+                                        allData.groupby('country')['population_below_poverty'].aggregate('mean').tolist())
+
+            recomListDistance.append(disEuc)
+            recomList.append(['country', 'population_below_poverty', 'mean', disEuc])
+            print(recomList)
+
+        # for tweets
+
+
+        # if slct_scope == 'country':
+        #   countryData = (df_tweets[(df_tweets[slct_scope].isin(slct_country))])
+        #   allData = df_tweets
+        #     mergedlist = pd.merge(pd.DataFrame(df_tweets['country'].astype(str).unique(), columns=['country']),
+        #                           countryData.groupby('country').aggregate('count'),
+        #                           on='country', how='left')
+        #     mergedlist['Keyword'] = mergedlist['Keyword'].fillna(0)
+        #     mergedlist['Keyword'] = preprocessing.normalize(
+        #         np.array([mergedlist['Keyword']]).reshape(1, -1)).reshape(-1, 1)
+        #
+        #     allData['Keyword'] = preprocessing.normalize(
+        #         np.array([allData['Keyword']]).reshape(1, -1)).reshape(-1, 1)
+        #
+        #     disEuc = distance.euclidean(
+        #         mergedlist.groupby('country')['Keyword'].aggregate('count').tolist(),
+        #         allData.groupby('country')['Keyword'].aggregate('count').tolist())
+        #
+        #     recomListDistance.append(disEuc)
+        #     recomList.append(['country', 'Keyword', 'count', disEuc])
+        #     print(recomList)
 
         maxRecom = heapq.nlargest(slct_nrecom, recomListDistance)
 
-        # print(maxRecom)
+        print(maxRecom)
         maxList_x_y_z = []
         for value in maxRecom:
             max_index = recomListDistance.index(value)
@@ -934,7 +1003,8 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
                     TestFinal[0] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find].sort_values(
                         ascending=ascending)
                     # referance
-                    refTest = refTest.groupby(slct_location).aggregate(slct_aggregation)[slct_find].sort_values(
+                    if slct_scope and slct_country:
+                        refTest = refTest.groupby(slct_location).aggregate(slct_aggregation)[slct_find].sort_values(
                         ascending=ascending)
             else:
                 while i < yAxisNum:
@@ -1146,7 +1216,8 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
     elif slct_specificfind:
         vistitle = the_label[0] + ' by ' + display_specificfind + ' in All ' + temp_x_label[0] + end
 
-    if slct_country:
+    if slct_country and slct_scope:
+        print(slct_country)
         if scope_label[0][-1] == 'y':
             temp_scope_label[0] = scope_label[0][:-1]
             end = 'ies'
@@ -1201,7 +1272,7 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
         color = 'Viridis_r'
     else:
         color = 'Viridis'
-
+    bar_chart_recom = {}
     # bar chart
     if yAxisNum == 1:
         bar_chart = go.FigureWidget(data=[
@@ -1213,18 +1284,6 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
                         'colorscale': color})
         ],
 
-            layout=go.Layout(
-                yaxis_title=the_label[0]
-            )
-        )
-        bar_chart_recom = go.FigureWidget(data=[
-            go.Bar(
-                x=refTest.index,
-                y=refTest.values,
-
-                marker={'color': refTest.values,
-                        'colorscale': color})
-        ],
             layout=go.Layout(
                 yaxis_title=the_label[0]
             )
@@ -1252,8 +1311,22 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
                 'yaxis2': {'title': the_label[1], 'overlaying': 'y', 'side': 'right'}
             }
         )
+    if slct_scope and slct_country:
+        bar_chart_recom = go.FigureWidget(data=[
+            go.Bar(
+                x=refTest.index,
+                y=refTest.values,
+
+                marker={'color': refTest.values,
+                        'colorscale': color})
+        ],
+            layout=go.Layout(
+                yaxis_title=the_label[0]
+            )
+        )
+        bar_chart_recom.update_layout(xaxis_title=x_label[0], title=vistitle_ref, title_x=0.5)
+
     bar_chart.update_layout(xaxis_title=x_label[0], title=vistitle, title_x=0.5)
-    bar_chart_recom.update_layout(xaxis_title=x_label[0], title=vistitle_ref, title_x=0.5)
 
     top_label = {"label": "Top", "value": 'Top'}
     bottom_label = {"label": "Bottom", "value": 'Bottom'}
