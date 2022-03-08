@@ -52,22 +52,22 @@ mask = ((df.country != 'None'))
 filtered_data = df.loc[mask, :]
 
 # genders row
-# for i in range(len(df.borrower_genders)):
-#     final_gender = ''
-#     list_of_gender = df['borrower_genders'][i]
-#     if type(list_of_gender) != str:
-#         final_gender = 'Not answered'
-#     else:
-#         unique = len(pd.unique((list_of_gender.split(', '))))
-#         if unique == 2:
-#             final_gender = 'Both'
-#         elif unique == 1:
-#             if list_of_gender[0] == 'f':
-#                 final_gender = 'Female'
-#             else:
-#                 final_gender = 'Male'
-#
-#     df.at[i, 'borrower_genders'] = final_gender
+for i in range(len(df.borrower_genders)):
+    final_gender = ''
+    list_of_gender = df['borrower_genders'][i]
+    if type(list_of_gender) != str:
+        final_gender = 'Not answered'
+    else:
+        unique = len(pd.unique((list_of_gender.split(', '))))
+        if unique == 2:
+            final_gender = 'Both'
+        elif unique == 1:
+            if list_of_gender[0] == 'f':
+                final_gender = 'Female'
+            else:
+                final_gender = 'Male'
+
+    df.at[i, 'borrower_genders'] = final_gender
 
 nominalOptions = ['sector', 'activity', 'repayment_interval', 'borrower_genders']
 numericalOptions = ['loan_amount', 'lender_count', 'funded_amount', 'term_in_months']
@@ -592,10 +592,13 @@ def set_agg_options(slct_find, location_main_title, options):
             return [], ''
         elif slct_find == ['Keyword']:
             return [{"label": "Count", "value": 'count'}], 'count'
+        elif slct_find == ['loan_amount']:
+            return [{"label": "Total", "value": 'sum'},
+                    {"label": "Count", "value": 'count'},
+                    {"label": "Average", "value": 'mean'}], 'sum'
         else:
 
             return [{"label": "Total", "value": 'sum'},
-                    {"label": "Count", "value": 'count'},
                     {"label": "Average", "value": 'mean'}], 'sum'
 
     else:
@@ -835,9 +838,12 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
 
     if slct_country and slct_scope:
         nominalOptions = ['sector', 'activity', 'repayment_interval', 'country',
-                          'Year']  # I removed gender for now bc it's slow
+                          'Year', 'borrower_genders']  # I removed gender for now bc it's slow
 
-        if slct_scope == 'country':
+        if slct_scope in nominalOptions:
+            nominalOptions.remove(slct_scope)
+
+
             nominalOptions2 = ['country']
             numericalOptions2 = ['population_below_poverty']
 
@@ -851,8 +857,12 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
         agg = ['sum', 'count', 'mean']
         for x in nominalOptions:
             for y in numericalOptions:
+                if y == 'loan_amount':
+                    agg = ['sum', 'count', 'mean']
+                else:
+                    agg = ['sum', 'mean']
                 for z in agg:
-                    #print(x, y, z)
+                    print(x, y, z)
                     mergedlist = pd.merge(pd.DataFrame(df[x].astype(str).unique(), columns=[x]),
                                           countryData.groupby(x).aggregate(z),
                                           on=x, how='left')
