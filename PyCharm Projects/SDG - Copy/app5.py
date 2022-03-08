@@ -592,10 +592,13 @@ def set_agg_options(slct_find, location_main_title, options):
             return [], ''
         elif slct_find == ['Keyword']:
             return [{"label": "Count", "value": 'count'}], 'count'
+        elif slct_find == ['loan_amount']:
+            return [{"label": "Total", "value": 'sum'},
+                    {"label": "Count", "value": 'count'},
+                    {"label": "Average", "value": 'mean'}], 'sum'
         else:
 
             return [{"label": "Total", "value": 'sum'},
-                    {"label": "Count", "value": 'count'},
                     {"label": "Average", "value": 'mean'}], 'sum'
 
     else:
@@ -837,7 +840,10 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
         nominalOptions = ['sector', 'activity', 'repayment_interval', 'country',
                           'Year']  # I removed gender for now bc it's slow
 
-        if slct_scope == 'country':
+        if slct_scope in nominalOptions:
+            nominalOptions.remove(slct_scope)
+
+
             nominalOptions2 = ['country']
             numericalOptions2 = ['population_below_poverty']
 
@@ -851,8 +857,12 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
         agg = ['sum', 'count', 'mean']
         for x in nominalOptions:
             for y in numericalOptions:
+                if y == 'loan_amount':
+                    agg = ['sum', 'count', 'mean']
+                else:
+                    agg = ['sum', 'mean']
                 for z in agg:
-                    #print(x, y, z)
+                    print(x, y, z)
                     mergedlist = pd.merge(pd.DataFrame(df[x].astype(str).unique(), columns=[x]),
                                           countryData.groupby(x).aggregate(z),
                                           on=x, how='left')
