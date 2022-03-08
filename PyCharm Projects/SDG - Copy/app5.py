@@ -20,7 +20,7 @@ df['Year'] = df['Date'].dt.year
 df['Year'] = df['Year'].astype(basestring)
 
 df_extreme = pd.read_csv("share-of-population-in-extreme-poverty.csv")
-df_tweets = pd.read_csv("Final_Data1.csv")
+df_tweets = pd.read_csv("Final_Data2.csv")
 
 # newCountry = list(set(df_extreme['country']).intersection(df['country']))
 newCountry = list(set(df_extreme['country']).intersection(df['country'], df_tweets['country']))
@@ -127,7 +127,7 @@ app.layout = html.Div(
         ),
 
         dcc.Loading(
-            id="loading-1", type="default", children=html.Div(id="loading-output-1")
+            id="loading-1",fullscreen=True,children=html.Div(id="loading-output-1")
         ),
 
         html.Div(
@@ -153,13 +153,13 @@ app.layout = html.Div(
                                      ),
                     ]
                 ),
+
                 html.Div(
                     children=[
                         html.Div(children="Specify Location", className="menu-title", id='location-subtitle'),
                         dcc.Dropdown(id="slct_specificlocation", options=[],
                                      multi=True,
                                      value='',
-                                     className="dropdown-scroll",
                                      ),
                     ], className="dropdown",
                 ),
