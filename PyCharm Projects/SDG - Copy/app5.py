@@ -52,22 +52,22 @@ mask = ((df.country != 'None'))
 filtered_data = df.loc[mask, :]
 
 # genders row
-for i in range(len(df.borrower_genders)):
-    final_gender = ''
-    list_of_gender = df['borrower_genders'][i]
-    if type(list_of_gender) != str:
-        final_gender = 'Not answered'
-    else:
-        unique = len(pd.unique((list_of_gender.split(', '))))
-        if unique == 2:
-            final_gender = 'Both'
-        elif unique == 1:
-            if list_of_gender[0] == 'f':
-                final_gender = 'Female'
-            else:
-                final_gender = 'Male'
-
-    df.at[i, 'borrower_genders'] = final_gender
+# for i in range(len(df.borrower_genders)):
+#     final_gender = ''
+#     list_of_gender = df['borrower_genders'][i]
+#     if type(list_of_gender) != str:
+#         final_gender = 'Not answered'
+#     else:
+#         unique = len(pd.unique((list_of_gender.split(', '))))
+#         if unique == 2:
+#             final_gender = 'Both'
+#         elif unique == 1:
+#             if list_of_gender[0] == 'f':
+#                 final_gender = 'Female'
+#             else:
+#                 final_gender = 'Male'
+#
+#     df.at[i, 'borrower_genders'] = final_gender
 
 nominalOptions = ['sector', 'activity', 'repayment_interval', 'borrower_genders']
 numericalOptions = ['loan_amount', 'lender_count', 'funded_amount', 'term_in_months']
@@ -862,7 +862,7 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
                 else:
                     agg = ['sum', 'mean']
                 for z in agg:
-                    print(x, y, z)
+                    #print(x, y, z)
                     mergedlist = pd.merge(pd.DataFrame(df[x].astype(str).unique(), columns=[x]),
                                           countryData.groupby(x).aggregate(z),
                                           on=x, how='left')
@@ -870,11 +870,21 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
 
                     #print('\nscope before normalization: ',mergedlist[y])
 
-                    mergedlist[y] = preprocessing.normalize(np.array([mergedlist[y]]).reshape(1, -1)).reshape(-1, 1)
+                    #mergedlist[y] = preprocessing.normalize(np.array([mergedlist[y]]).reshape(1, -1)).reshape(-1, 1)
+                    sumListM = sum(mergedlist[y])
+                    mergedlist[y] = [float(i) / sumListM for i in mergedlist[y]]
+
+                    print('test1:',mergedlist[y])
+                    print('test1:',sum(mergedlist[y]))
 
                     #print('\nscope after normalization:', mergedlist[y])
 
-                    allData[y] = preprocessing.normalize(np.array([allData[y]]).reshape(1, -1)).reshape(-1, 1)
+                    #allData[y] = preprocessing.normalize(np.array([allData[y]]).reshape(1, -1)).reshape(-1, 1)
+                    sumListA = sum(allData[y])
+                    allData[y] = [float(i) / sumListA for i in allData[y]]
+                    print('test2:',allData[y])
+                    print('test2:',sum(allData[y]))
+
 
                     #print('\nref after normalization:', allData[y])
 
