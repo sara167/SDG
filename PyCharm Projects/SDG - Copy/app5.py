@@ -879,7 +879,6 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
 
                     recomListDistance.append(disEuc)
                     recomList.append([x, y, z, disEuc])
-                    #print(recomList)
 
 
 
