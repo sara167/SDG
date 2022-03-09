@@ -862,42 +862,21 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
                 else:
                     agg = ['sum', 'mean']
                 for z in agg:
-                    #print(x, y, z)
                     mergedlist = pd.merge(pd.DataFrame(df[x].astype(str).unique(), columns=[x]),
                                           countryData.groupby(x).aggregate(z),
                                           on=x, how='left')
                     mergedlist[y] = mergedlist[y].fillna(0)
 
-                    #print('\nscope before normalization: ',mergedlist[y])
-
-                    #mergedlist[y] = preprocessing.normalize(np.array([mergedlist[y]]).reshape(1, -1)).reshape(-1, 1)
                     sumListM = sum(mergedlist[y])
                     mergedlist[y] = [float(i) / sumListM for i in mergedlist[y]]
 
-                    print('test1:',mergedlist[y])
-                    print('test1:',sum(mergedlist[y]))
 
-                    #print('\nscope after normalization:', mergedlist[y])
-
-                    #allData[y] = preprocessing.normalize(np.array([allData[y]]).reshape(1, -1)).reshape(-1, 1)
                     sumListA = sum(allData[y])
                     allData[y] = [float(i) / sumListA for i in allData[y]]
-                    print('test2:',allData[y])
-                    print('test2:',sum(allData[y]))
 
+                    disEuc = distance.euclidean(mergedlist.groupby(x)[y].fillna(0).aggregate(z).tolist(),
+                                               allData.groupby(x)[y].fillna(0).aggregate(z).tolist())
 
-                    #print('\nref after normalization:', allData[y])
-
-
-                    #print('\nspecific:',mergedlist.groupby(x)[y].aggregate(z).tolist())
-                    #print('all:',allData.groupby(x)[y].aggregate(z).tolist())
-
-
-                    disEuc = distance.euclidean(mergedlist.groupby(x)[y].aggregate(z).tolist(),
-                                               allData.groupby(x)[y].aggregate(z).tolist())
-
-
-                    #print('distance:',disEuc)
                     recomListDistance.append(disEuc)
                     recomList.append([x, y, z, disEuc])
                     #print(recomList)
@@ -912,7 +891,6 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
                                   on='country', how='left')
             mergedlist['population_below_poverty'] = mergedlist['population_below_poverty'].fillna(0)
             mergedlist['population_below_poverty'] = preprocessing.normalize(np.array([mergedlist['population_below_poverty']]).reshape(1, -1)).reshape(-1, 1)
-
             allData['population_below_poverty'] = preprocessing.normalize(np.array([allData['population_below_poverty']]).reshape(1, -1)).reshape(-1, 1)
 
             disEuc = distance.euclidean(mergedlist.groupby('country')['population_below_poverty'].aggregate('mean').tolist(),
@@ -920,7 +898,6 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
 
             recomListDistance.append(disEuc)
             recomList.append(['country', 'population_below_poverty', 'mean', disEuc])
-            print(recomList)
 
         # for tweets
 
@@ -947,8 +924,8 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
         #     print(recomList)
 
         maxRecom = heapq.nlargest(slct_nrecom, recomListDistance)
-
         print(maxRecom)
+
         maxList_x_y_z = []
         for value in maxRecom:
             max_index = recomListDistance.index(value)
@@ -989,15 +966,19 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
     ref_filtered_data = df.loc[mask, :]
     refTest = ref_filtered_data
 
-    yAxisNum = 1
+    yAxisNum = 2
     # if len(slct_location_options) > 2:
     if len(slct_find) <= 2:
         if len(slct_find) == 0:
             slct_find = 'loan_amount'
+            yAxisNum=1
         elif len(slct_find) == 1:
             slct_find = slct_find[0]
+            yAxisNum=1
         elif len(slct_find) == 2:
             yAxisNum = 2
+    elif len([slct_find])==1:
+        yAxisNum=1
 
     ascending = 'Ascending' in slct_order
 
@@ -1009,6 +990,7 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
         tail = 'Bottom'
     TestFinal = ['', '', '', '']
     i = 0
+
 
     if not slct_specificlocation:  ##no specific location
         if not slct_sorting:  # no sorting, by default ascending
