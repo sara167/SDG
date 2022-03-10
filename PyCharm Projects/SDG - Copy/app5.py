@@ -52,22 +52,22 @@ mask = ((df.country != 'None'))
 filtered_data = df.loc[mask, :]
 
 # genders row
-# for i in range(len(df.borrower_genders)):
-#     final_gender = ''
-#     list_of_gender = df['borrower_genders'][i]
-#     if type(list_of_gender) != str:
-#         final_gender = 'Not answered'
-#     else:
-#         unique = len(pd.unique((list_of_gender.split(', '))))
-#         if unique == 2:
-#             final_gender = 'Both'
-#         elif unique == 1:
-#             if list_of_gender[0] == 'f':
-#                 final_gender = 'Female'
-#             else:
-#                 final_gender = 'Male'
-#
-#     df.at[i, 'borrower_genders'] = final_gender
+for i in range(len(df.borrower_genders)):
+    final_gender = ''
+    list_of_gender = df['borrower_genders'][i]
+    if type(list_of_gender) != str:
+        final_gender = 'Not answered'
+    else:
+        unique = len(pd.unique((list_of_gender.split(', '))))
+        if unique == 2:
+            final_gender = 'Both'
+        elif unique == 1:
+            if list_of_gender[0] == 'f':
+                final_gender = 'Female'
+            else:
+                final_gender = 'Male'
+
+    df.at[i, 'borrower_genders'] = final_gender
 
 nominalOptions = ['sector', 'activity', 'repayment_interval', 'borrower_genders']
 numericalOptions = ['loan_amount', 'lender_count', 'funded_amount', 'term_in_months']
@@ -383,11 +383,7 @@ app.layout = html.Div(
                     children=dcc.Graph(id='bar', figure={}, ),
                     className='card',
                 ),
-                html.Div(
-                    id='barrec_div',
-                    children=dcc.Graph(id='barrec', figure={}),
-                    className='card',
-                ),
+
             ],
             className='wrapper',
         ),
@@ -776,22 +772,21 @@ def set_display_graph(display_bar, display_map, display_all):
     else:
         return {}, {}
 
-
-@app.callback(
-    Output('barrec', 'style'),
-    Input('slct_country', 'value'))
-def set_display_recom_graph(slct_country):
-    if slct_country:
-        print(slct_country)
-        return {}
-    else:
-        return {'display': 'none'}
+#
+# @app.callback(
+#     Output('barrec', 'style'),
+#     Input('slct_country', 'value'))
+# def set_display_recom_graph(slct_country):
+#     if slct_country:
+#         print(slct_country)
+#         return {}
+#     else:
+#         return {'display': 'none'}
 
 
 @app.callback(
     [Output(component_id='map', component_property='figure'),
      Output(component_id='bar', component_property='figure'),
-     Output(component_id='barrec', component_property='figure'),
      Output(component_id='slct_sorting', component_property='options'),
      Output("loading-output-1", "children"),
      ],
@@ -831,11 +826,6 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
                  slct_location_options):
     # trying recommendations
 
-
-    nominalOptions = ['sector', 'activity', 'repayment_interval', 'country','Year']  # I removed gender for now bc it's slow
-    ### To do list ###
-    # tweets?
-
     if slct_country and slct_scope:
         nominalOptions = ['sector', 'activity', 'repayment_interval', 'country',
                           'Year', 'borrower_genders']  # I removed gender for now bc it's slow
@@ -843,18 +833,10 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
         if slct_scope in nominalOptions:
             nominalOptions.remove(slct_scope)
 
-
-            nominalOptions2 = ['country']
-            numericalOptions2 = ['population_below_poverty']
-
-            numericalOptions3 = ['Keyword']
-
-
         countryData = (df[(df[slct_scope].isin(slct_country))])
         allData = df
         recomList = []
         recomListDistance = []
-        agg = ['sum', 'count', 'mean']
         for x in nominalOptions:
             for y in numericalOptions:
                 if y == 'loan_amount':
@@ -862,44 +844,64 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
                 else:
                     agg = ['sum', 'mean']
                 for z in agg:
+                    #initilazing recom list
                     mergedlist = pd.merge(pd.DataFrame(df[x].astype(str).unique(), columns=[x]),
                                           countryData.groupby(x).aggregate(z),
                                           on=x, how='left')
+                    #print(mergedlist)
+                    #print('before fill', mergedlist[y].tolist())
                     mergedlist[y] = mergedlist[y].fillna(0)
-
+                    #print('after fill', mergedlist[y].tolist())
                     sumListM = sum(mergedlist[y])
+
                     mergedlist[y] = [float(i) / sumListM for i in mergedlist[y]]
+                    #print('sum(mergedlist[y])',sum(mergedlist[y]))
+
+                    mergedlist[y] = mergedlist[y].fillna(0) #not sure if it's a must
+                    #print(len(mergedlist[y]))
+                    #print('after norm', mergedlist[y].tolist())
+
+                    #initilazing ref list
+                    allList = pd.merge(pd.DataFrame(df[x].astype(str).unique(), columns=[x]),
+                                          allData.groupby(x).aggregate(z),
+                                          on=x, how='left')
+                    #print(allList)
+                    allList[y] = allList[y].fillna(0)
+                    sumListA = sum(allList[y])
+                    allList[y] = [float(i) / sumListA for i in allList[y]]
+                    allList[y] = allList[y].fillna(0) #not sure if it's a must
+                    #print('sum(allList[y])',sum(allList[y]))
+
+                    #print(len(allList[y]))
+                    #print('after norm', allList[y].tolist())
 
 
-                    sumListA = sum(allData[y])
-                    allData[y] = [float(i) / sumListA for i in allData[y]]
-
-                    disEuc = distance.euclidean(mergedlist.groupby(x)[y].fillna(0).aggregate(z).tolist(),
-                                               allData.groupby(x)[y].fillna(0).aggregate(z).tolist())
-
+                    # distance between recom and ref list
+                    disEuc = distance.euclidean(mergedlist[y].tolist(),allList[y].tolist())
+                    #print(disEuc)
                     recomListDistance.append(disEuc)
                     recomList.append([x, y, z, disEuc])
 
 
+        # I think we cant have pop and tweets. how will the output look like? it will only show the country and it's pop or tweets value
 
-        if slct_scope == 'country':
-            countryData = (df_extreme[(df_extreme[slct_scope].isin(slct_country))])
-            allData = df_extreme
-            mergedlist = pd.merge(pd.DataFrame(df_extreme['country'].astype(str).unique(), columns=['country']),
-                                  countryData.groupby('country').aggregate('mean'),
-                                  on='country', how='left')
-            mergedlist['population_below_poverty'] = mergedlist['population_below_poverty'].fillna(0)
-            mergedlist['population_below_poverty'] = preprocessing.normalize(np.array([mergedlist['population_below_poverty']]).reshape(1, -1)).reshape(-1, 1)
-            allData['population_below_poverty'] = preprocessing.normalize(np.array([allData['population_below_poverty']]).reshape(1, -1)).reshape(-1, 1)
-
-            disEuc = distance.euclidean(mergedlist.groupby('country')['population_below_poverty'].aggregate('mean').tolist(),
-                                        allData.groupby('country')['population_below_poverty'].aggregate('mean').tolist())
-
-            recomListDistance.append(disEuc)
-            recomList.append(['country', 'population_below_poverty', 'mean', disEuc])
+        # if slct_scope == 'country':
+        #     countryData = (df_extreme[(df_extreme[slct_scope].isin(slct_country))])
+        #     allData = df_extreme
+        #     mergedlist = pd.merge(pd.DataFrame(df_extreme['country'].astype(str).unique(), columns=['country']),
+        #                           countryData.groupby('country').aggregate('mean'),
+        #                           on='country', how='left')
+        #     mergedlist['population_below_poverty'] = mergedlist['population_below_poverty'].fillna(0)
+        #     mergedlist['population_below_poverty'] = preprocessing.normalize(np.array([mergedlist['population_below_poverty']]).reshape(1, -1)).reshape(-1, 1)
+        #     allData['population_below_poverty'] = preprocessing.normalize(np.array([allData['population_below_poverty']]).reshape(1, -1)).reshape(-1, 1)
+        #
+        #     disEuc = distance.euclidean(mergedlist.groupby('country')['population_below_poverty'].aggregate('mean').tolist(),
+        #                                 allData.groupby('country')['population_below_poverty'].aggregate('mean').tolist())
+        #
+        #     recomListDistance.append(disEuc)
+        #     recomList.append(['country', 'population_below_poverty', 'mean', disEuc])
 
         # for tweets
-
 
         # if slct_scope == 'country':
         #   countryData = (df_tweets[(df_tweets[slct_scope].isin(slct_country))])
@@ -932,9 +934,8 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
             max_x_y_z = recomList[max_index]
             recomList.pop(max_index)
             maxList_x_y_z.append(max_x_y_z)
-            # print(max_x_y_z)
 
-        # print(maxList_x_y_z)
+        print(maxList_x_y_z)
 
         # show the result based on number of recom
         slct_location = maxList_x_y_z[slct_nrecom - 1][0]
@@ -942,6 +943,11 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
         slct_aggregation = maxList_x_y_z[slct_nrecom - 1][2]
         slct_specificfind_nominal = slct_scope
         slct_specificfind = slct_country
+
+        # print('slct_location', slct_location)
+        # print('slct_find', slct_find)
+        # print('slct_aggregation', slct_location)
+        # print('slct_specificfind_nominal', slct_location)
 
     mask = ((df.Date >= start_date)
             & (df.Date <= end_date) & (df.country != 'None'))
@@ -1243,6 +1249,8 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
             0] + ' by ' + displayCountry
         vistitle_ref = 'Reference for Recommendation Number ' + str(slct_nrecom) + ' : ' + the_label[0] + ' in ' + \
                        x_label[0] + ' by All ' + temp_scope_label[0] + end
+        vistitle_mix = 'Recommendation Number ' + str(slct_nrecom) + ' : ' + the_label[0] + ' in ' + \
+                       x_label[0] + ' by '+displayCountry+' VS. All ' + temp_scope_label[0] + end
 
     data = [dict(
         type='choropleth',
@@ -1273,7 +1281,6 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
         color = 'Viridis_r'
     else:
         color = 'Viridis'
-    bar_chart_recom = {}
     # bar chart
     if yAxisNum == 1:
         bar_chart = go.FigureWidget(data=[
@@ -1289,6 +1296,8 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
                 yaxis_title=the_label[0]
             )
         )
+        bar_chart.update_layout(xaxis_title=x_label[0], title=vistitle, title_x=0.5)
+
     elif yAxisNum == 2:
 
         bar_chart = go.FigureWidget(data=[
@@ -1308,33 +1317,59 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
                    )
         ],
             layout={
-                'yaxis': {'title': the_label[0]},
-                'yaxis2': {'title': the_label[1], 'overlaying': 'y', 'side': 'right'}
+                'yaxis': {'title': the_label[0], 'color':'#440356'},
+                'yaxis2': {'title': the_label[1], 'color': '#20A187','overlaying': 'y', 'side': 'right'}
             }
         )
+        bar_chart.update_layout(xaxis_title=x_label[0], title=vistitle, title_x=0.5)
+
+    # if slct_scope and slct_country:
+    #     bar_chart_recom = go.FigureWidget(data=[
+    #         go.Bar(
+    #             x=refTest.index,
+    #             y=refTest.values,
+    #
+    #             marker={'color': refTest.values,
+    #                     'colorscale': color})
+    #     ],
+    #         layout=go.Layout(
+    #             yaxis_title=the_label[0]
+    #         )
+    #     )
+    #     bar_chart_recom.update_layout(xaxis_title=x_label[0], title=vistitle_ref, title_x=0.5)
     if slct_scope and slct_country:
-        bar_chart_recom = go.FigureWidget(data=[
-            go.Bar(
-                x=refTest.index,
-                y=refTest.values,
-
-                marker={'color': refTest.values,
-                        'colorscale': color})
+        bar_chart = go.FigureWidget(data=[
+            go.Bar(name=the_label[0] + ' by '+displayCountry,
+                   x=TestFinal[0].index,
+                   y=TestFinal[0].values,
+                   yaxis='y',
+                   marker=dict(color='#20A187'),
+                   offsetgroup=0,
+                   ),
+            go.Bar(name=the_label[0] + ' by '+temp_scope_label[0]+end,
+                   x=refTest.index,
+                   y=refTest.values,
+                   yaxis='y2',
+                   marker=dict(color='#440356'),
+                   offsetgroup=1,
+                   )
         ],
-            layout=go.Layout(
-                yaxis_title=the_label[0]
-            )
+            layout={
+                'yaxis': {'title': the_label[0] + ' by '+displayCountry, 'color':'#440356'},
+                'yaxis2': {'title': the_label[0] + ' by '+temp_scope_label[0]+end, 'color': '#20A187','overlaying': 'y', 'side': 'right'}
+            }
         )
-        bar_chart_recom.update_layout(xaxis_title=x_label[0], title=vistitle_ref, title_x=0.5)
+        bar_chart.update_layout(xaxis_title=x_label[0], title=vistitle_mix, title_x=0.5)
 
-    bar_chart.update_layout(xaxis_title=x_label[0], title=vistitle, title_x=0.5)
+        #bar_chart_recom.update_layout(xaxis_title=x_label[0], title=vistitle_mix, title_x=0.5)
+
 
     top_label = {"label": "Top", "value": 'Top'}
     bottom_label = {"label": "Bottom", "value": 'Bottom'}
 
     options = [top_label, bottom_label]
 
-    return fig, bar_chart, bar_chart_recom, options, None
+    return fig, bar_chart, options, None
 
 
 if __name__ == "__main__":
