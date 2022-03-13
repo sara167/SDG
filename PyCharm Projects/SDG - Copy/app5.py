@@ -803,7 +803,7 @@ def set_display_graph(display_bar, display_map, display_all):
 def set_display_recom_graph(slct_country):
     if slct_country:
         print(slct_country)
-        return {},{},{},{}
+        return {}, {}, {}, {}
     else:
         return {'display': 'none'}, {'display': 'none'}, {'display': 'none'}, {'display': 'none'}
 
@@ -908,8 +908,7 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
                     # print(disEuc)
                     recomListDistance.append(disEuc)
                     recomList.append([x, y, z, disEuc])
-                    #print(recomList)
-
+                    # print(recomList)
 
         slct_nrecom = 5
         maxRecom = heapq.nlargest(slct_nrecom, recomListDistance)
@@ -986,8 +985,8 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
         tail = 'Bottom'
     TestFinal = ['', '', '', '']
     i = 0
-    recTest = ['','','','','']
-    refTest = ['','','','','']
+    recTest = ['', '', '', '', '']
+    refTest = ['', '', '', '', '']
     if slct_scope and slct_country:
 
         print(maxList_x_y_z)
@@ -1274,7 +1273,7 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
                        x_label[0] + ' by ' + displayCountry + ' VS. All ' + temp_scope_label[0] + end
     fig = {}
     bar_chart = {}
-    bar_chart2 = [{},{},{},{},{}]
+    bar_chart2 = [{}, {}, {}, {}, {}]
     print(slct_scope)
     print(slct_country)
     if slct_scope and slct_country:
@@ -1384,7 +1383,7 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
 
     options = [top_label, bottom_label]
 
-    return fig, bar_chart, options, None, bar_chart2[1], bar_chart2[2],bar_chart2[3], bar_chart2[4]
+    return fig, bar_chart, options, None, bar_chart2[1], bar_chart2[2], bar_chart2[3], bar_chart2[4]
 
 
 if __name__ == "__main__":
