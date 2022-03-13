@@ -127,7 +127,7 @@ app.layout = html.Div(
         ),
 
         dcc.Loading(
-            id="loading-1",fullscreen=True,children=html.Div(id="loading-output-1")
+            id="loading-1", fullscreen=True, children=html.Div(id="loading-output-1")
         ),
 
         html.Div(
@@ -381,6 +381,26 @@ app.layout = html.Div(
                 html.Div(
                     id='bar_div',
                     children=dcc.Graph(id='bar', figure={}, ),
+                    className='card',
+                ),
+                html.Div(
+                    id='rec1_bar_div',
+                    children=dcc.Graph(id='rec1_bar', figure={}, ),
+                    className='card',
+                ),
+                html.Div(
+                    id='rec2_bar_div',
+                    children=dcc.Graph(id='rec2_bar', figure={}, ),
+                    className='card',
+                ),
+                html.Div(
+                    id='rec3_bar_div',
+                    children=dcc.Graph(id='rec3_bar', figure={}, ),
+                    className='card',
+                ),
+                html.Div(
+                    id='rec4_bar_div',
+                    children=dcc.Graph(id='rec4_bar', figure={}, ),
                     className='card',
                 ),
 
@@ -772,16 +792,20 @@ def set_display_graph(display_bar, display_map, display_all):
     else:
         return {}, {}
 
+
 #
-# @app.callback(
-#     Output('barrec', 'style'),
-#     Input('slct_country', 'value'))
-# def set_display_recom_graph(slct_country):
-#     if slct_country:
-#         print(slct_country)
-#         return {}
-#     else:
-#         return {'display': 'none'}
+@app.callback([
+    Output('rec1_bar', 'style'),
+    Output('rec2_bar', 'style'),
+    Output('rec3_bar', 'style'),
+    Output('rec4_bar', 'style')],
+    Input('slct_country', 'value'))
+def set_display_recom_graph(slct_country):
+    if slct_country:
+        print(slct_country)
+        return {},{},{},{}
+    else:
+        return {'display': 'none'}, {'display': 'none'}, {'display': 'none'}, {'display': 'none'}
 
 
 @app.callback(
@@ -789,6 +813,10 @@ def set_display_graph(display_bar, display_map, display_all):
      Output(component_id='bar', component_property='figure'),
      Output(component_id='slct_sorting', component_property='options'),
      Output("loading-output-1", "children"),
+     Output(component_id='rec1_bar', component_property='figure'),
+     Output(component_id='rec2_bar', component_property='figure'),
+     Output(component_id='rec3_bar', component_property='figure'),
+     Output(component_id='rec4_bar', component_property='figure'),
      ],
 
     [Input(component_id='slct_location', component_property='value'),
@@ -828,7 +856,7 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
 
     if slct_country and slct_scope:
         nominalOptions = ['sector', 'activity', 'repayment_interval', 'country',
-                          'Year', 'borrower_genders']  # I removed gender for now bc it's slow
+                          'Year', 'borrower_genders']
 
         if slct_scope in nominalOptions:
             nominalOptions.remove(slct_scope)
@@ -844,86 +872,46 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
                 else:
                     agg = ['sum', 'mean']
                 for z in agg:
-                    #initilazing recom list
+                    # initilazing recom list
                     mergedlist = pd.merge(pd.DataFrame(df[x].astype(str).unique(), columns=[x]),
                                           countryData.groupby(x).aggregate(z),
                                           on=x, how='left')
-                    #print(mergedlist)
-                    #print('before fill', mergedlist[y].tolist())
+                    # print(mergedlist)
+                    # print('before fill', mergedlist[y].tolist())
                     mergedlist[y] = mergedlist[y].fillna(0)
-                    #print('after fill', mergedlist[y].tolist())
+                    # print('after fill', mergedlist[y].tolist())
                     sumListM = sum(mergedlist[y])
 
                     mergedlist[y] = [float(i) / sumListM for i in mergedlist[y]]
-                    #print('sum(mergedlist[y])',sum(mergedlist[y]))
+                    # print('sum(mergedlist[y])',sum(mergedlist[y]))
 
-                    mergedlist[y] = mergedlist[y].fillna(0) #not sure if it's a must
-                    #print(len(mergedlist[y]))
-                    #print('after norm', mergedlist[y].tolist())
+                    mergedlist[y] = mergedlist[y].fillna(0)  # not sure if it's a must
+                    # print(len(mergedlist[y]))
+                    # print('after norm', mergedlist[y].tolist())
 
-                    #initilazing ref list
+                    # initilazing ref list
                     allList = pd.merge(pd.DataFrame(df[x].astype(str).unique(), columns=[x]),
-                                          allData.groupby(x).aggregate(z),
-                                          on=x, how='left')
-                    #print(allList)
+                                       allData.groupby(x).aggregate(z),
+                                       on=x, how='left')
+                    # print(allList)
                     allList[y] = allList[y].fillna(0)
                     sumListA = sum(allList[y])
                     allList[y] = [float(i) / sumListA for i in allList[y]]
-                    allList[y] = allList[y].fillna(0) #not sure if it's a must
-                    #print('sum(allList[y])',sum(allList[y]))
+                    allList[y] = allList[y].fillna(0)  # not sure if it's a must
+                    # print('sum(allList[y])',sum(allList[y]))
 
-                    #print(len(allList[y]))
-                    #print('after norm', allList[y].tolist())
-
+                    # print(len(allList[y]))
+                    # print('after norm', allList[y].tolist())
 
                     # distance between recom and ref list
-                    disEuc = distance.euclidean(mergedlist[y].tolist(),allList[y].tolist())
-                    #print(disEuc)
+                    disEuc = distance.euclidean(mergedlist[y].tolist(), allList[y].tolist())
+                    # print(disEuc)
                     recomListDistance.append(disEuc)
                     recomList.append([x, y, z, disEuc])
+                    #print(recomList)
 
 
-        # I think we cant have pop and tweets. how will the output look like? it will only show the country and it's pop or tweets value
-
-        # if slct_scope == 'country':
-        #     countryData = (df_extreme[(df_extreme[slct_scope].isin(slct_country))])
-        #     allData = df_extreme
-        #     mergedlist = pd.merge(pd.DataFrame(df_extreme['country'].astype(str).unique(), columns=['country']),
-        #                           countryData.groupby('country').aggregate('mean'),
-        #                           on='country', how='left')
-        #     mergedlist['population_below_poverty'] = mergedlist['population_below_poverty'].fillna(0)
-        #     mergedlist['population_below_poverty'] = preprocessing.normalize(np.array([mergedlist['population_below_poverty']]).reshape(1, -1)).reshape(-1, 1)
-        #     allData['population_below_poverty'] = preprocessing.normalize(np.array([allData['population_below_poverty']]).reshape(1, -1)).reshape(-1, 1)
-        #
-        #     disEuc = distance.euclidean(mergedlist.groupby('country')['population_below_poverty'].aggregate('mean').tolist(),
-        #                                 allData.groupby('country')['population_below_poverty'].aggregate('mean').tolist())
-        #
-        #     recomListDistance.append(disEuc)
-        #     recomList.append(['country', 'population_below_poverty', 'mean', disEuc])
-
-        # for tweets
-
-        # if slct_scope == 'country':
-        #   countryData = (df_tweets[(df_tweets[slct_scope].isin(slct_country))])
-        #   allData = df_tweets
-        #     mergedlist = pd.merge(pd.DataFrame(df_tweets['country'].astype(str).unique(), columns=['country']),
-        #                           countryData.groupby('country').aggregate('count'),
-        #                           on='country', how='left')
-        #     mergedlist['Keyword'] = mergedlist['Keyword'].fillna(0)
-        #     mergedlist['Keyword'] = preprocessing.normalize(
-        #         np.array([mergedlist['Keyword']]).reshape(1, -1)).reshape(-1, 1)
-        #
-        #     allData['Keyword'] = preprocessing.normalize(
-        #         np.array([allData['Keyword']]).reshape(1, -1)).reshape(-1, 1)
-        #
-        #     disEuc = distance.euclidean(
-        #         mergedlist.groupby('country')['Keyword'].aggregate('count').tolist(),
-        #         allData.groupby('country')['Keyword'].aggregate('count').tolist())
-        #
-        #     recomListDistance.append(disEuc)
-        #     recomList.append(['country', 'Keyword', 'count', disEuc])
-        #     print(recomList)
-
+        slct_nrecom = 5
         maxRecom = heapq.nlargest(slct_nrecom, recomListDistance)
         print(maxRecom)
 
@@ -938,11 +926,14 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
         print(maxList_x_y_z)
 
         # show the result based on number of recom
-        slct_location = maxList_x_y_z[slct_nrecom - 1][0]
-        slct_find = maxList_x_y_z[slct_nrecom - 1][1]
-        slct_aggregation = maxList_x_y_z[slct_nrecom - 1][2]
+        slct_location = maxList_x_y_z[0][0]
+        slct_find = maxList_x_y_z[0][1]
+        slct_aggregation = maxList_x_y_z[0][2]
         slct_specificfind_nominal = slct_scope
         slct_specificfind = slct_country
+        print(slct_location)
+        print(slct_find)
+        print(slct_aggregation)
 
         # print('slct_location', slct_location)
         # print('slct_find', slct_find)
@@ -969,21 +960,21 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
 
     mask = ((df.country != 'None'))
     ref_filtered_data = df.loc[mask, :]
-    refTest = ref_filtered_data
+    refTest_data = ref_filtered_data
 
     yAxisNum = 2
     # if len(slct_location_options) > 2:
     if len(slct_find) <= 2:
         if len(slct_find) == 0:
             slct_find = 'loan_amount'
-            yAxisNum=1
+            yAxisNum = 1
         elif len(slct_find) == 1:
             slct_find = slct_find[0]
-            yAxisNum=1
+            yAxisNum = 1
         elif len(slct_find) == 2:
             yAxisNum = 2
-    elif len([slct_find])==1:
-        yAxisNum=1
+    elif len([slct_find]) == 1:
+        yAxisNum = 1
 
     ascending = 'Ascending' in slct_order
 
@@ -995,140 +986,170 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
         tail = 'Bottom'
     TestFinal = ['', '', '', '']
     i = 0
+    recTest = ['','','','','']
+    refTest = ['','','','','']
+    if slct_scope and slct_country:
+
+        print(maxList_x_y_z)
+
+        slct_location = maxList_x_y_z[0][0]
+        slct_find = maxList_x_y_z[0][1]
+        slct_aggregation = maxList_x_y_z[0][2]
+        slct_specificfind_nominal = slct_scope
+        slct_specificfind = slct_country
+        recTest0 = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find].sort_values(
+            ascending=ascending)
+        refTest0 = refTest_data.groupby(slct_location).aggregate(slct_aggregation)[slct_find].sort_values(
+            ascending=ascending)
+
+        for i in range(5):
+            slct_location = maxList_x_y_z[i][0]
+            slct_find = maxList_x_y_z[i][1]
+            slct_aggregation = maxList_x_y_z[i][2]
+            slct_specificfind_nominal = slct_scope
+            slct_specificfind = slct_country
+            recTest[i] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find].sort_values(
+                ascending=ascending)
+            refTest[i] = refTest_data.groupby(slct_location).aggregate(slct_aggregation)[slct_find].sort_values(
+                ascending=ascending)
+
+    else:
+        if not slct_specificlocation:  ##no specific location
+            if not slct_sorting:  # no sorting, by default ascending
+                if yAxisNum == 1:
+                    if slct_location == 'country' and slct_find == 'population_below_poverty':
+                        TestFinal[0] = Test2.groupby(slct_location).aggregate('mean')[slct_find].sort_values(
+                            ascending=ascending)
+                    elif slct_location == 'country' and slct_find == 'Keyword':
+                        TestFinal[0] = Test3.groupby(slct_location).aggregate('count')[slct_find].sort_values(
+                            ascending=ascending)
+                    else:
+                        TestFinal[0] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find].sort_values(
+                            ascending=ascending)
+                        # referance
+                        # if slct_scope and slct_country:
+                        #     refTest = refTest.groupby(slct_location).aggregate(slct_aggregation)[slct_find].sort_values(
+                        #     ascending=ascending)
+                else:
+                    while i < yAxisNum:
+                        if slct_location == 'country' and slct_find[i] == 'population_below_poverty':
+                            TestFinal[i] = Test2.groupby(slct_location).aggregate('mean')[slct_find[i]].sort_values(
+                                ascending=ascending)
+                        elif slct_location == 'country' and slct_find[i] == 'Keyword':
+                            TestFinal[i] = Test3.groupby(slct_location).aggregate('count')[slct_find[i]].sort_values(
+                                ascending=ascending)
+                        else:
+                            TestFinal[i] = Test.groupby(slct_location).aggregate(slct_aggregation)[
+                                slct_find[i]].sort_values(
+                                ascending=ascending)
+                        i = i + 1
+
+            elif head in slct_sorting:  # Top
+                if yAxisNum == 1:
+                    if slct_location == 'country' and slct_find == 'population_below_poverty':
+                        TestFinal[0] = Test2.groupby(slct_location).aggregate('mean')[slct_find].sort_values(
+                            ascending=ascending).head(slct_nvalue)
+                    elif slct_location == 'country' and slct_find == 'Keyword':
+                        TestFinal[0] = Test3.groupby(slct_location).aggregate('count')[slct_find].sort_values(
+                            ascending=ascending).head(slct_nvalue)
+                    else:
+                        TestFinal[0] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find].sort_values(
+                            ascending=ascending).head(slct_nvalue)
+                else:
+                    while i < yAxisNum:
+                        if slct_location == 'country' and slct_find[i] == 'population_below_poverty':
+                            if i == 0:
+                                TestFinal[i] = Test2.groupby(slct_location).aggregate('mean')[slct_find[i]].sort_values(
+                                    ascending=ascending).head(slct_nvalue)
+                            else:
+                                TestFinal[i] = Test2.groupby(slct_location).aggregate('mean')[slct_find[i]].sort_values(
+                                    ascending=ascending)
+                        elif slct_location == 'country' and slct_find[i] == 'Keyword':
+                            if i == 0:
+                                TestFinal[i] = Test3.groupby(slct_location).aggregate('count')[
+                                    slct_find[i]].sort_values(
+                                    ascending=ascending).head(slct_nvalue)
+                            else:
+                                TestFinal[i] = Test3.groupby(slct_location).aggregate('count')[
+                                    slct_find[i]].sort_values(
+                                    ascending=ascending)
+                        else:
+                            if i == 0:
+                                TestFinal[i] = Test.groupby(slct_location).aggregate(slct_aggregation)[
+                                    slct_find[i]].sort_values(
+                                    ascending=ascending).head(slct_nvalue)
+                            else:
+                                TestFinal[i] = Test.groupby(slct_location).aggregate(slct_aggregation)[
+                                    slct_find[i]].sort_values(
+                                    ascending=ascending)
+                        i = i + 1
+
+            elif tail in slct_sorting:  # Bottom
+                if yAxisNum == 1:
+                    if slct_location == 'country' and slct_find == 'population_below_poverty':
+                        TestFinal[0] = Test2.groupby(slct_location).aggregate('mean')[slct_find].sort_values(
+                            ascending=ascending).tail(slct_nvalue)
+                    elif slct_location == 'country' and slct_find == 'Keyword':
+                        TestFinal[0] = Test3.groupby(slct_location).aggregate('count')[slct_find].sort_values(
+                            ascending=ascending).tail(slct_nvalue)
+                    else:
+                        TestFinal[0] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find].sort_values(
+                            ascending=ascending).tail(slct_nvalue)
+                else:
+                    while i < yAxisNum:
+                        if slct_location == 'country' and slct_find[i] == 'population_below_poverty':
+                            if i == 0:
+                                TestFinal[i] = Test2.groupby(slct_location).aggregate('mean')[slct_find[i]].sort_values(
+                                    ascending=ascending).tail(slct_nvalue)
+                            else:
+                                TestFinal[i] = Test2.groupby(slct_location).aggregate('mean')[slct_find[i]].sort_values(
+                                    ascending=ascending)
+                        elif slct_location == 'country' and slct_find[i] == 'Keyword':
+                            if i == 0:
+                                TestFinal[i] = Test3.groupby(slct_location).aggregate('count')[
+                                    slct_find[i]].sort_values(
+                                    ascending=ascending).tail(slct_nvalue)
+                            else:
+                                TestFinal[i] = Test3.groupby(slct_location).aggregate('count')[
+                                    slct_find[i]].sort_values(
+                                    ascending=ascending)
+                        else:
+                            if i == 0:
+                                TestFinal[i] = Test.groupby(slct_location).aggregate(slct_aggregation)[
+                                    slct_find[i]].sort_values(
+                                    ascending=ascending).tail(slct_nvalue)
+                            else:
+                                TestFinal[i] = Test.groupby(slct_location).aggregate(slct_aggregation)[
+                                    slct_find[i]].sort_values(
+                                    ascending=ascending)
+                        i = i + 1
 
 
-    if not slct_specificlocation:  ##no specific location
-        if not slct_sorting:  # no sorting, by default ascending
+        else:  ##specific location
+            if slct_find != 'population_below_poverty' and slct_find != 'Keyword':
+                Test = (Test[(Test[slct_location].isin(slct_specificlocation))])
+            if slct_find == 'population_below_poverty':
+                Test2 = (Test2[(Test2[slct_location].isin(slct_specificlocation))])
+
+            if slct_find == 'Keyword':
+                Test3 = (Test3[(Test3[slct_location].isin(slct_specificlocation))])
+
             if yAxisNum == 1:
                 if slct_location == 'country' and slct_find == 'population_below_poverty':
-                    TestFinal[0] = Test2.groupby(slct_location).aggregate('mean')[slct_find].sort_values(
-                        ascending=ascending)
+                    TestFinal[i] = Test2.groupby(slct_location).aggregate('mean')[slct_find]
                 elif slct_location == 'country' and slct_find == 'Keyword':
-                    TestFinal[0] = Test3.groupby(slct_location).aggregate('count')[slct_find].sort_values(
-                        ascending=ascending)
+                    TestFinal[i] = Test3.groupby(slct_location).aggregate('count')[slct_find]
                 else:
-                    TestFinal[0] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find].sort_values(
-                        ascending=ascending)
-                    # referance
-                    if slct_scope and slct_country:
-                        refTest = refTest.groupby(slct_location).aggregate(slct_aggregation)[slct_find].sort_values(
-                        ascending=ascending)
+                    TestFinal[0] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find]
             else:
                 while i < yAxisNum:
                     if slct_location == 'country' and slct_find[i] == 'population_below_poverty':
-                        TestFinal[i] = Test2.groupby(slct_location).aggregate('mean')[slct_find[i]].sort_values(
-                            ascending=ascending)
+                        TestFinal[i] = Test2.groupby(slct_location).aggregate('mean')[slct_find[i]]
                     elif slct_location == 'country' and slct_find[i] == 'Keyword':
-                        TestFinal[i] = Test3.groupby(slct_location).aggregate('count')[slct_find[i]].sort_values(
-                            ascending=ascending)
+                        TestFinal[i] = Test3.groupby(slct_location).aggregate('count')[slct_find[i]]
                     else:
-                        TestFinal[i] = Test.groupby(slct_location).aggregate(slct_aggregation)[
-                            slct_find[i]].sort_values(
-                            ascending=ascending)
+                        TestFinal[i] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find[i]]
                     i = i + 1
-
-        elif head in slct_sorting:  # Top
-            if yAxisNum == 1:
-                if slct_location == 'country' and slct_find == 'population_below_poverty':
-                    TestFinal[0] = Test2.groupby(slct_location).aggregate('mean')[slct_find].sort_values(
-                        ascending=ascending).head(slct_nvalue)
-                elif slct_location == 'country' and slct_find == 'Keyword':
-                    TestFinal[0] = Test3.groupby(slct_location).aggregate('count')[slct_find].sort_values(
-                        ascending=ascending).head(slct_nvalue)
-                else:
-                    TestFinal[0] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find].sort_values(
-                        ascending=ascending).head(slct_nvalue)
-            else:
-                while i < yAxisNum:
-                    if slct_location == 'country' and slct_find[i] == 'population_below_poverty':
-                        if i == 0:
-                            TestFinal[i] = Test2.groupby(slct_location).aggregate('mean')[slct_find[i]].sort_values(
-                                ascending=ascending).head(slct_nvalue)
-                        else:
-                            TestFinal[i] = Test2.groupby(slct_location).aggregate('mean')[slct_find[i]].sort_values(
-                                ascending=ascending)
-                    elif slct_location == 'country' and slct_find[i] == 'Keyword':
-                        if i == 0:
-                            TestFinal[i] = Test3.groupby(slct_location).aggregate('count')[slct_find[i]].sort_values(
-                                ascending=ascending).head(slct_nvalue)
-                        else:
-                            TestFinal[i] = Test3.groupby(slct_location).aggregate('count')[slct_find[i]].sort_values(
-                                ascending=ascending)
-                    else:
-                        if i == 0:
-                            TestFinal[i] = Test.groupby(slct_location).aggregate(slct_aggregation)[
-                                slct_find[i]].sort_values(
-                                ascending=ascending).head(slct_nvalue)
-                        else:
-                            TestFinal[i] = Test.groupby(slct_location).aggregate(slct_aggregation)[
-                                slct_find[i]].sort_values(
-                                ascending=ascending)
-                    i = i + 1
-
-        elif tail in slct_sorting:  # Bottom
-            if yAxisNum == 1:
-                if slct_location == 'country' and slct_find == 'population_below_poverty':
-                    TestFinal[0] = Test2.groupby(slct_location).aggregate('mean')[slct_find].sort_values(
-                        ascending=ascending).tail(slct_nvalue)
-                elif slct_location == 'country' and slct_find == 'Keyword':
-                    TestFinal[0] = Test3.groupby(slct_location).aggregate('count')[slct_find].sort_values(
-                        ascending=ascending).tail(slct_nvalue)
-                else:
-                    TestFinal[0] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find].sort_values(
-                        ascending=ascending).tail(slct_nvalue)
-            else:
-                while i < yAxisNum:
-                    if slct_location == 'country' and slct_find[i] == 'population_below_poverty':
-                        if i == 0:
-                            TestFinal[i] = Test2.groupby(slct_location).aggregate('mean')[slct_find[i]].sort_values(
-                                ascending=ascending).tail(slct_nvalue)
-                        else:
-                            TestFinal[i] = Test2.groupby(slct_location).aggregate('mean')[slct_find[i]].sort_values(
-                                ascending=ascending)
-                    elif slct_location == 'country' and slct_find[i] == 'Keyword':
-                        if i == 0:
-                            TestFinal[i] = Test3.groupby(slct_location).aggregate('count')[slct_find[i]].sort_values(
-                                ascending=ascending).tail(slct_nvalue)
-                        else:
-                            TestFinal[i] = Test3.groupby(slct_location).aggregate('count')[slct_find[i]].sort_values(
-                                ascending=ascending)
-                    else:
-                        if i == 0:
-                            TestFinal[i] = Test.groupby(slct_location).aggregate(slct_aggregation)[
-                                slct_find[i]].sort_values(
-                                ascending=ascending).tail(slct_nvalue)
-                        else:
-                            TestFinal[i] = Test.groupby(slct_location).aggregate(slct_aggregation)[
-                                slct_find[i]].sort_values(
-                                ascending=ascending)
-                    i = i + 1
-
-
-    else:  ##specific location
-        if slct_find != 'population_below_poverty' and slct_find != 'Keyword':
-            Test = (Test[(Test[slct_location].isin(slct_specificlocation))])
-        if slct_find == 'population_below_poverty':
-            Test2 = (Test2[(Test2[slct_location].isin(slct_specificlocation))])
-
-        if slct_find == 'Keyword':
-            Test3 = (Test3[(Test3[slct_location].isin(slct_specificlocation))])
-
-        if yAxisNum == 1:
-            if slct_location == 'country' and slct_find == 'population_below_poverty':
-                TestFinal[i] = Test2.groupby(slct_location).aggregate('mean')[slct_find]
-            elif slct_location == 'country' and slct_find == 'Keyword':
-                TestFinal[i] = Test3.groupby(slct_location).aggregate('count')[slct_find]
-            else:
-                TestFinal[0] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find]
-        else:
-            while i < yAxisNum:
-                if slct_location == 'country' and slct_find[i] == 'population_below_poverty':
-                    TestFinal[i] = Test2.groupby(slct_location).aggregate('mean')[slct_find[i]]
-                elif slct_location == 'country' and slct_find[i] == 'Keyword':
-                    TestFinal[i] = Test3.groupby(slct_location).aggregate('count')[slct_find[i]]
-                else:
-                    TestFinal[i] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find[i]]
-                i = i + 1
 
     # print(head)
     if yAxisNum > 1 and (slct_sorting is None):
@@ -1249,127 +1270,121 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
             0] + ' by ' + displayCountry
         vistitle_ref = 'Reference for Recommendation Number ' + str(slct_nrecom) + ' : ' + the_label[0] + ' in ' + \
                        x_label[0] + ' by All ' + temp_scope_label[0] + end
-        vistitle_mix = 'Recommendation Number ' + str(slct_nrecom) + ' : ' + the_label[0] + ' in ' + \
-                       x_label[0] + ' by '+displayCountry+' VS. All ' + temp_scope_label[0] + end
+        vistitle_mix = 'Recommendation Number ' + str(slct_nrecom) + ': ' + the_label[0] + ' in ' + \
+                       x_label[0] + ' by ' + displayCountry + ' VS. All ' + temp_scope_label[0] + end
+    fig = {}
+    bar_chart = {}
+    bar_chart2 = [{},{},{},{},{}]
+    print(slct_scope)
+    print(slct_country)
+    if slct_scope and slct_country:
+        print('here')
 
-    data = [dict(
-        type='choropleth',
-        locations=TestFinal[0].index,
-        locationmode='country names',
-        z=TestFinal[0].values,
-        text=TestFinal[0].index,
-        colorscale="Viridis",
-        reversescale=not ascending,
-        marker=dict(line=dict(width=0.5, color='white')),
+        for i in range(5):
+            bar_chart2[i] = go.FigureWidget(data=[
+                go.Bar(name='All ' + temp_scope_label[0] + end,
+                       x=refTest[i].index,
+                       y=refTest[i].values,
+                       yaxis='y',
+                       marker=dict(color='#440356'),
+                       offsetgroup=0,
+                       ),
+                go.Bar(name=displayCountry,
+                       x=recTest[i].index,
+                       y=recTest[i].values,
+                       yaxis='y2',
+                       marker=dict(color='#20A187'),
+                       offsetgroup=1,
+                       )
+            ],
+                layout={
+                    'yaxis': {'title': the_label[0] + ' by All ' + temp_scope_label[0] + end, 'color': '#20A187'},
+                    'yaxis2': {'title': the_label[0] + ' by ' + displayCountry, 'color': '#440356',
+                               'overlaying': 'y', 'side': 'right'}
+                }
+            )
+            bar_chart2[i].update_layout(xaxis_title=x_label[0], title=vistitle_mix, title_x=0.5)
 
-        colorbar=dict(autotick=False, tickprefix='', title=the_label[0], ),
-    )]
-    layout = dict(
-        title=vistitle,
-        geo=dict(
-            showframe=False,
-            showcoastlines=True,
-            projection_type='Mercator',
-            showocean=True,
-            oceancolor="#E5ECF6",
-        )
-    )
+            bar_chart = bar_chart2[0]
 
-    fig = dict(data=data, layout=layout)
-
-    if not ascending:
-        color = 'Viridis_r'
     else:
-        color = 'Viridis'
-    # bar chart
-    if yAxisNum == 1:
-        bar_chart = go.FigureWidget(data=[
-            go.Bar(
-                x=TestFinal[0].index,
-                y=TestFinal[0].values,
+        data = [dict(
+            type='choropleth',
+            locations=TestFinal[0].index,
+            locationmode='country names',
+            z=TestFinal[0].values,
+            text=TestFinal[0].index,
+            colorscale="Viridis",
+            reversescale=not ascending,
+            marker=dict(line=dict(width=0.5, color='white')),
 
-                marker={'color': TestFinal[0].values,
-                        'colorscale': color})
-        ],
-
-            layout=go.Layout(
-                yaxis_title=the_label[0]
+            colorbar=dict(autotick=False, tickprefix='', title=the_label[0], ),
+        )]
+        layout = dict(
+            title=vistitle,
+            geo=dict(
+                showframe=False,
+                showcoastlines=True,
+                projection_type='Mercator',
+                showocean=True,
+                oceancolor="#E5ECF6",
             )
         )
-        bar_chart.update_layout(xaxis_title=x_label[0], title=vistitle, title_x=0.5)
 
-    elif yAxisNum == 2:
+        fig = dict(data=data, layout=layout)
 
-        bar_chart = go.FigureWidget(data=[
-            go.Bar(name=the_label[0],
-                   x=TestFinal[0].index,
-                   y=TestFinal[0].values,
-                   yaxis='y',
-                   marker=dict(color='#20A187'),
-                   offsetgroup=0,
-                   ),
-            go.Bar(name=the_label[1],
-                   x=TestFinal[1].index,
-                   y=TestFinal[1].values,
-                   yaxis='y2',
-                   marker=dict(color='#440356'),
-                   offsetgroup=1,
-                   )
-        ],
-            layout={
-                'yaxis': {'title': the_label[0], 'color':'#440356'},
-                'yaxis2': {'title': the_label[1], 'color': '#20A187','overlaying': 'y', 'side': 'right'}
-            }
-        )
-        bar_chart.update_layout(xaxis_title=x_label[0], title=vistitle, title_x=0.5)
+        if not ascending:
+            color = 'Viridis_r'
+        else:
+            color = 'Viridis'
+        # bar chart
+        if yAxisNum == 1:
+            bar_chart = go.FigureWidget(data=[
+                go.Bar(
+                    x=TestFinal[0].index,
+                    y=TestFinal[0].values,
 
-    # if slct_scope and slct_country:
-    #     bar_chart_recom = go.FigureWidget(data=[
-    #         go.Bar(
-    #             x=refTest.index,
-    #             y=refTest.values,
-    #
-    #             marker={'color': refTest.values,
-    #                     'colorscale': color})
-    #     ],
-    #         layout=go.Layout(
-    #             yaxis_title=the_label[0]
-    #         )
-    #     )
-    #     bar_chart_recom.update_layout(xaxis_title=x_label[0], title=vistitle_ref, title_x=0.5)
-    if slct_scope and slct_country:
-        bar_chart = go.FigureWidget(data=[
-            go.Bar(name=the_label[0] + ' by '+displayCountry,
-                   x=TestFinal[0].index,
-                   y=TestFinal[0].values,
-                   yaxis='y',
-                   marker=dict(color='#20A187'),
-                   offsetgroup=0,
-                   ),
-            go.Bar(name=the_label[0] + ' by '+temp_scope_label[0]+end,
-                   x=refTest.index,
-                   y=refTest.values,
-                   yaxis='y2',
-                   marker=dict(color='#440356'),
-                   offsetgroup=1,
-                   )
-        ],
-            layout={
-                'yaxis': {'title': the_label[0] + ' by '+displayCountry, 'color':'#440356'},
-                'yaxis2': {'title': the_label[0] + ' by '+temp_scope_label[0]+end, 'color': '#20A187','overlaying': 'y', 'side': 'right'}
-            }
-        )
-        bar_chart.update_layout(xaxis_title=x_label[0], title=vistitle_mix, title_x=0.5)
+                    marker={'color': TestFinal[0].values,
+                            'colorscale': color})
+            ],
 
-        #bar_chart_recom.update_layout(xaxis_title=x_label[0], title=vistitle_mix, title_x=0.5)
+                layout=go.Layout(
+                    yaxis_title=the_label[0]
+                )
+            )
+            bar_chart.update_layout(xaxis_title=x_label[0], title=vistitle, title_x=0.5)
 
+        elif yAxisNum == 2:
+
+            bar_chart = go.FigureWidget(data=[
+                go.Bar(name=the_label[0],
+                       x=TestFinal[0].index,
+                       y=TestFinal[0].values,
+                       yaxis='y',
+                       marker=dict(color='#20A187'),
+                       offsetgroup=0,
+                       ),
+                go.Bar(name=the_label[1],
+                       x=TestFinal[1].index,
+                       y=TestFinal[1].values,
+                       yaxis='y2',
+                       marker=dict(color='#440356'),
+                       offsetgroup=1,
+                       )
+            ],
+                layout={
+                    'yaxis': {'title': the_label[0], 'color': '#440356'},
+                    'yaxis2': {'title': the_label[1], 'color': '#20A187', 'overlaying': 'y', 'side': 'right'}
+                }
+            )
+            bar_chart.update_layout(xaxis_title=x_label[0], title=vistitle, title_x=0.5)
 
     top_label = {"label": "Top", "value": 'Top'}
     bottom_label = {"label": "Bottom", "value": 'Bottom'}
 
     options = [top_label, bottom_label]
 
-    return fig, bar_chart, options, None
+    return fig, bar_chart, options, None, bar_chart2[1], bar_chart2[2],bar_chart2[3], bar_chart2[4]
 
 
 if __name__ == "__main__":
