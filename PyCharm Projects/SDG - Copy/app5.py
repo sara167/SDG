@@ -1157,13 +1157,13 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
                 if x['value'] == i:
                     if slct_find:
                         if counter == 0:
-                            display = x['label'] + ' & '
+                            display = x['label'] + ' &'
                         else:
-                            display =  x['label']
-                    if counter==0:
+                            display = x['label']
+                    if counter == 0:
                         the_label[counter] = the_label0 + ' ' + display
                     else:
-                        the_label[counter] = display
+                        the_label[counter] = the_label0 + ' '+ display
                     counter = counter + 1
             print('|||||||||||||||||||||||||||||||||')
             print(''.join(the_label))
@@ -1196,7 +1196,6 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
             end = 's'
         vistitle = ' '.join(the_label) + ' in All ' + temp_x_label[0] + end
 
-
     if slct_country and slct_scope:
         if scope_label[0][-1] == 'y':
             temp_scope_label[0] = scope_label[0][:-1]
@@ -1215,8 +1214,6 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
                     displayCountry = displayCountry + x
                 else:
                     displayCountry = displayCountry + x + ', '
-
-
 
     fig = {}
     bar_chart = {}
@@ -1241,14 +1238,14 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
                        x=refTest[i].index,
                        y=refTest[i].values,
                        yaxis='y',
-                       marker=dict(color='#440356'),
+                       marker=dict(color='#20A187'),
                        offsetgroup=0,
                        ),
                 go.Bar(name=displayCountry,
                        x=recTest[i].index,
                        y=recTest[i].values,
                        yaxis='y2',
-                       marker=dict(color='#20A187'),
+                       marker=dict(color='#440356'),
                        offsetgroup=1,
                        )
             ],
@@ -1328,12 +1325,11 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
                        )
             ],
                 layout={
-                    'yaxis': {'title': the_label[0][:-2], 'color': '#440356'},
-                    'yaxis2': {'title': the_label[1], 'color': '#20A187', 'overlaying': 'y', 'side': 'right'}
+                    'yaxis': {'title': the_label[0][:-2], 'color': '#20A187'},
+                    'yaxis2': {'title': the_label[1],  'color': '#440356', 'overlaying': 'y', 'side': 'right'}
                 }
             )
             bar_chart.update_layout(xaxis_title=x_label[0], title=vistitle, title_x=0.5)
-
 
     top_label = {"label": "Top", "value": 'Top'}
     bottom_label = {"label": "Bottom", "value": 'Bottom'}
