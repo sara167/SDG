@@ -1,5 +1,4 @@
 import heapq
-import textwrap
 
 import dash
 from dash import dcc, callback_context
@@ -11,7 +10,6 @@ import dash_daq as daq
 import plotly.graph_objs as go
 from numpy.compat import basestring
 from scipy.spatial import distance
-from sklearn import preprocessing
 
 df = pd.read_csv("kiva_loans.csv")
 df["Date"] = pd.to_datetime(df["posted_time"], format="%Y-%m-%d")
@@ -48,7 +46,7 @@ while i < len(df_tweets['country']):
         df_tweets.at[i, 'country'] = 'None'
     i = i + 1
 
-mask = ((df.country != 'None'))
+mask = (df.country != 'None')
 filtered_data = df.loc[mask, :]
 
 # genders row
@@ -678,9 +676,7 @@ def set_location_options(slct_location):
     Input('slct_scope', 'value')
 )
 def set_scope_options(slct_scope):
-    print(slct_scope)
-    mask = ((df.country != 'None'))
-
+    mask = (df.country != 'None')
     filtered_data = df.loc[mask, :]
     if slct_scope in nominalOptions or slct_scope == 'country' or slct_scope == 'region' or slct_scope == 'Year':
         return [{'label': c, 'value': c} for c in np.sort(filtered_data[slct_scope].astype(str).unique())]
@@ -696,7 +692,7 @@ def set_scope_options(slct_scope):
 
 )
 def set_find_options(slct_find, slct_specificfind_nominal):
-    mask = ((df.country != 'None'))
+    mask = (df.country != 'None')
     filtered_data = df.loc[mask, :]
 
     if len(slct_specificfind_nominal) == 4:
@@ -802,7 +798,6 @@ def set_display_graph(display_bar, display_map, display_all):
     Input('slct_country', 'value'))
 def set_display_recom_graph(slct_country):
     if slct_country:
-        print(slct_country)
         return {}, {}, {}, {}
     else:
         return {'display': 'none'}, {'display': 'none'}, {'display': 'none'}, {'display': 'none'}
@@ -839,10 +834,12 @@ def set_display_recom_graph(slct_country):
      Input(component_id='slct_scope', component_property='value'),
      Input(component_id='slct_scope', component_property='options'),
 
+
      ],
     [State("slct_find", "options"),
      State("slct_aggregation", "options"),
-     State("slct_location", "options")]
+     State("slct_location", "options"),
+     State("slct_country", "options")]
 
 )
 def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, slct_order,
@@ -851,9 +848,10 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
                  slct_specificfind, slct_specificfind_nominal, start_date, end_date, map_style,
                  display_all, display_map, display_bar, slct_country, slct_nrecom, slct_scope, slct_scope_options,
                  options, aggoptions,
-                 slct_location_options):
+                 slct_location_options, slct_country_options):
     # trying recommendations
-
+    print(slct_scope)
+    print(slct_scope_options)
     if slct_country and slct_scope:
         nominalOptions = ['sector', 'activity', 'repayment_interval', 'country',
                           'Year', 'borrower_genders']
@@ -876,43 +874,30 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
                     mergedlist = pd.merge(pd.DataFrame(df[x].astype(str).unique(), columns=[x]),
                                           countryData.groupby(x).aggregate(z),
                                           on=x, how='left')
-                    # print(mergedlist)
-                    # print('before fill', mergedlist[y].tolist())
+
                     mergedlist[y] = mergedlist[y].fillna(0)
-                    # print('after fill', mergedlist[y].tolist())
                     sumListM = sum(mergedlist[y])
 
                     mergedlist[y] = [float(i) / sumListM for i in mergedlist[y]]
-                    # print('sum(mergedlist[y])',sum(mergedlist[y]))
 
                     mergedlist[y] = mergedlist[y].fillna(0)  # not sure if it's a must
-                    # print(len(mergedlist[y]))
-                    # print('after norm', mergedlist[y].tolist())
 
                     # initilazing ref list
                     allList = pd.merge(pd.DataFrame(df[x].astype(str).unique(), columns=[x]),
                                        allData.groupby(x).aggregate(z),
                                        on=x, how='left')
-                    # print(allList)
                     allList[y] = allList[y].fillna(0)
                     sumListA = sum(allList[y])
                     allList[y] = [float(i) / sumListA for i in allList[y]]
                     allList[y] = allList[y].fillna(0)  # not sure if it's a must
-                    # print('sum(allList[y])',sum(allList[y]))
-
-                    # print(len(allList[y]))
-                    # print('after norm', allList[y].tolist())
 
                     # distance between recom and ref list
                     disEuc = distance.euclidean(mergedlist[y].tolist(), allList[y].tolist())
-                    # print(disEuc)
                     recomListDistance.append(disEuc)
                     recomList.append([x, y, z, disEuc])
-                    # print(recomList)
 
         slct_nrecom = 5
         maxRecom = heapq.nlargest(slct_nrecom, recomListDistance)
-        print(maxRecom)
 
         maxList_x_y_z = []
         for value in maxRecom:
@@ -922,7 +907,6 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
             recomList.pop(max_index)
             maxList_x_y_z.append(max_x_y_z)
 
-        print(maxList_x_y_z)
 
         # show the result based on number of recom
         slct_location = maxList_x_y_z[0][0]
@@ -930,14 +914,6 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
         slct_aggregation = maxList_x_y_z[0][2]
         slct_specificfind_nominal = slct_scope
         slct_specificfind = slct_country
-        print(slct_location)
-        print(slct_find)
-        print(slct_aggregation)
-
-        # print('slct_location', slct_location)
-        # print('slct_find', slct_find)
-        # print('slct_aggregation', slct_location)
-        # print('slct_specificfind_nominal', slct_location)
 
     mask = ((df.Date >= start_date)
             & (df.Date <= end_date) & (df.country != 'None'))
@@ -989,23 +965,16 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
     refTest = ['', '', '', '', '']
     if slct_scope and slct_country:
 
-        print(maxList_x_y_z)
-
         slct_location = maxList_x_y_z[0][0]
         slct_find = maxList_x_y_z[0][1]
         slct_aggregation = maxList_x_y_z[0][2]
-        slct_specificfind_nominal = slct_scope
         slct_specificfind = slct_country
-        recTest0 = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find].sort_values(
-            ascending=ascending)
-        refTest0 = refTest_data.groupby(slct_location).aggregate(slct_aggregation)[slct_find].sort_values(
-            ascending=ascending)
+
 
         for i in range(5):
             slct_location = maxList_x_y_z[i][0]
             slct_find = maxList_x_y_z[i][1]
             slct_aggregation = maxList_x_y_z[i][2]
-            slct_specificfind_nominal = slct_scope
             slct_specificfind = slct_country
             recTest[i] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find].sort_values(
                 ascending=ascending)
@@ -1025,10 +994,7 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
                     else:
                         TestFinal[0] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find].sort_values(
                             ascending=ascending)
-                        # referance
-                        # if slct_scope and slct_country:
-                        #     refTest = refTest.groupby(slct_location).aggregate(slct_aggregation)[slct_find].sort_values(
-                        #     ascending=ascending)
+
                 else:
                     while i < yAxisNum:
                         if slct_location == 'country' and slct_find[i] == 'population_below_poverty':
@@ -1150,7 +1116,6 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
                         TestFinal[i] = Test.groupby(slct_location).aggregate(slct_aggregation)[slct_find[i]]
                     i = i + 1
 
-    # print(head)
     if yAxisNum > 1 and (slct_sorting is None):
         TestFinal[1] = TestFinal[1].filter(items=TestFinal[0].index.tolist(), axis=0)
 
@@ -1175,7 +1140,6 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
         for x in options:
             if x['value'] == slct_find:
                 the_label2 = x['label']
-
         the_label[0] = the_label1 + ' ' + the_label2
 
     if yAxisNum > 1:
@@ -1203,7 +1167,6 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
         temp_scope_label = ['']
         temp_scope_label[0] = scope_label[0]
 
-    vistitle_ref = 'Reference'
     if slct_specificlocation:
         display_specificlocation = slct_specificlocation[0]
         if len(slct_specificlocation) > 1:
@@ -1244,7 +1207,6 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
         vistitle = the_label[0] + ' by ' + display_specificfind + ' in All ' + temp_x_label[0] + end
 
     if slct_country and slct_scope:
-        print(slct_country)
         if scope_label[0][-1] == 'y':
             temp_scope_label[0] = scope_label[0][:-1]
             end = 'ies'
@@ -1263,23 +1225,29 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
                 else:
                     displayCountry = displayCountry + x + ', '
 
-            # vistitle = the_label[0] + ' in All ' + temp_x_label[0] + end
-
         vistitle = 'Recommendation Number ' + str(slct_nrecom) + ': ' + the_label[0] + ' in ' + x_label[
             0] + ' by ' + displayCountry
-        vistitle_ref = 'Reference for Recommendation Number ' + str(slct_nrecom) + ' : ' + the_label[0] + ' in ' + \
-                       x_label[0] + ' by All ' + temp_scope_label[0] + end
-        vistitle_mix = 'Recommendation Number ' + str(slct_nrecom) + ': ' + the_label[0] + ' in ' + \
-                       x_label[0] + ' by ' + displayCountry + ' VS. All ' + temp_scope_label[0] + end
+
     fig = {}
     bar_chart = {}
     bar_chart2 = [{}, {}, {}, {}, {}]
-    print(slct_scope)
-    print(slct_country)
     if slct_scope and slct_country:
-        print('here')
 
         for i in range(5):
+            slct_location = maxList_x_y_z[i][0]
+            slct_find = maxList_x_y_z[i][1]
+            slct_aggregation = maxList_x_y_z[i][2]
+            slct_specificfind_nominal = slct_scope
+            slct_specificfind = slct_country[0]
+
+            x_label = [x['label'] for x in slct_location_options if x['value'] == slct_location][0]
+            y_label = [x['label'] for x in allOptions if x['value'] == slct_find][0]
+            for x in aggoptions:
+                if x['value'] == slct_aggregation:
+                    the_label0 = x['label'] + ' '+y_label
+
+            vistitle_mix = 'Recommendation Number ' + str(i + 1) + ': ' + the_label0 + ' in ' + \
+                           x_label + ' by ' + displayCountry + ' VS. All ' + temp_scope_label[0] + end
             bar_chart2[i] = go.FigureWidget(data=[
                 go.Bar(name='All ' + temp_scope_label[0] + end,
                        x=refTest[i].index,
@@ -1297,12 +1265,12 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
                        )
             ],
                 layout={
-                    'yaxis': {'title': the_label[0] + ' by All ' + temp_scope_label[0] + end, 'color': '#20A187'},
-                    'yaxis2': {'title': the_label[0] + ' by ' + displayCountry, 'color': '#440356',
+                    'yaxis': {'title': the_label0 + ' by All ' + temp_scope_label[0] + end, 'color': '#20A187'},
+                    'yaxis2': {'title': the_label0 + ' by ' + displayCountry, 'color': '#440356',
                                'overlaying': 'y', 'side': 'right'}
                 }
             )
-            bar_chart2[i].update_layout(xaxis_title=x_label[0], title=vistitle_mix, title_x=0.5)
+            bar_chart2[i].update_layout(xaxis_title=x_label, title=vistitle_mix, title_x=0.5)
 
             bar_chart = bar_chart2[0]
 
