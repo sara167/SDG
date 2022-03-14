@@ -94,7 +94,7 @@ external_stylesheets = [
 ]
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-app.title = "Loans Analytics: Understand Poverty"
+app.title = "Poverty Tracker"
 
 # App layout
 app.layout = html.Div(
@@ -103,10 +103,10 @@ app.layout = html.Div(
         html.Div(
             children=[
                 html.H1(
-                    children="Loans Analytics", className="header-title"
+                    children="Poverty Tracker", className="header-title"
                 ),
                 html.P(
-                    children="Analyze the loans from kiva dataset",
+                    children="Visual Analytics for Monitoring SDG Poverty Indicators",
                     className="header-description",
                 ),
                 html.Div(
@@ -1166,7 +1166,7 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
                         the_label[counter] = display
                     counter = counter + 1
             print('|||||||||||||||||||||||||||||||||')
-            print(' '.join(the_label))
+            print(''.join(the_label))
 
     temp_x_label = ['']
     temp_x_label[0] = x_label[0]
@@ -1187,7 +1187,7 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
                 else:
                     display_specificlocation = display_specificlocation + x + ', '
 
-        vistitle = ' '.join(the_label) + ' in ' + display_specificlocation
+        vistitle = ''.join(the_label) + ' in ' + display_specificlocation
     else:
         if x_label[0][-1] == 'y':
             temp_x_label[0] = x_label[0][:-1]
@@ -1312,7 +1312,7 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
         elif yAxisNum == 2:
 
             bar_chart = go.FigureWidget(data=[
-                go.Bar(name=the_label[0],
+                go.Bar(name=the_label[0][:-2],
                        x=TestFinal[0].index,
                        y=TestFinal[0].values,
                        yaxis='y',
@@ -1328,11 +1328,12 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
                        )
             ],
                 layout={
-                    'yaxis': {'title': the_label[0], 'color': '#440356'},
+                    'yaxis': {'title': the_label[0][:-2], 'color': '#440356'},
                     'yaxis2': {'title': the_label[1], 'color': '#20A187', 'overlaying': 'y', 'side': 'right'}
                 }
             )
             bar_chart.update_layout(xaxis_title=x_label[0], title=vistitle, title_x=0.5)
+
 
     top_label = {"label": "Top", "value": 'Top'}
     bottom_label = {"label": "Bottom", "value": 'Bottom'}
