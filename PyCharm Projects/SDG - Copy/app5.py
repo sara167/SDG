@@ -356,16 +356,16 @@ app.layout = html.Div(
                                      ),
                     ]
                 ),
-                html.Div(
-                    children=[
-                        html.Div(children="Recommendation Number", className="menu-title"),
-                        dcc.Slider(1, 5, 1,
-                                   value=1,
-                                   id='slct_nrecom'
-                                   ),
-                        html.Div(id='slider-output-container'),
-                    ],
-                ),
+                # html.Div(
+                #     children=[
+                #         html.Div(children="Recommendation Number", className="menu-title"),
+                #         dcc.Slider(1, 5, 1,
+                #                    value=1,
+                #                    id='slct_nrecom'
+                #                    ),
+                #         html.Div(id='slider-output-container'),
+                #     ],
+                # ),
             ],
             className="menu",
         ),
@@ -441,13 +441,13 @@ def set_country(slct_scope):
     return True, ''
 
 
-@app.callback(
-    Output('slct_nrecom', 'disabled'),
-    Input('slct_country', 'value'))
-def set_nrecom(slct_country):
-    if slct_country:
-        return False
-    return True
+# @app.callback(
+#     Output('slct_nrecom', 'disabled'),
+#     Input('slct_country', 'value'))
+# def set_nrecom(slct_country):
+#     if slct_country:
+#         return False
+#     return True
 
 
 @app.callback(
@@ -830,7 +830,7 @@ def set_display_recom_graph(slct_country):
      Input(component_id="display_map", component_property="n_clicks"),
      Input(component_id="display_bar", component_property="n_clicks"),
      Input(component_id='slct_country', component_property='value'),
-     Input(component_id='slct_nrecom', component_property='value'),
+     # Input(component_id='slct_nrecom', component_property='value'),
      Input(component_id='slct_scope', component_property='value'),
      Input(component_id='slct_scope', component_property='options'),
 
@@ -845,7 +845,7 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
                  slct_nvalue,
                  slct_aggregation,
                  slct_specificfind, slct_specificfind_nominal, start_date, end_date, map_style,
-                 display_all, display_map, display_bar, slct_country, slct_nrecom, slct_scope, slct_scope_options,
+                 display_all, display_map, display_bar, slct_country, slct_scope, slct_scope_options,
                  options, aggoptions,
                  slct_location_options, slct_country_options):
     # trying recommendations
