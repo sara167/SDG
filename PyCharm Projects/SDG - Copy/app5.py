@@ -834,7 +834,6 @@ def set_display_recom_graph(slct_country):
      Input(component_id='slct_scope', component_property='value'),
      Input(component_id='slct_scope', component_property='options'),
 
-
      ],
     [State("slct_find", "options"),
      State("slct_aggregation", "options"),
@@ -850,8 +849,7 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
                  options, aggoptions,
                  slct_location_options, slct_country_options):
     # trying recommendations
-    print(slct_scope)
-    print(slct_scope_options)
+
     if slct_country and slct_scope:
         nominalOptions = ['sector', 'activity', 'repayment_interval', 'country',
                           'Year', 'borrower_genders']
@@ -906,7 +904,6 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
             max_x_y_z = recomList[max_index]
             recomList.pop(max_index)
             maxList_x_y_z.append(max_x_y_z)
-
 
         # show the result based on number of recom
         slct_location = maxList_x_y_z[0][0]
@@ -969,7 +966,6 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
         slct_find = maxList_x_y_z[0][1]
         slct_aggregation = maxList_x_y_z[0][2]
         slct_specificfind = slct_country
-
 
         for i in range(5):
             slct_location = maxList_x_y_z[i][0]
@@ -1143,8 +1139,9 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
         the_label[0] = the_label1 + ' ' + the_label2
 
     if yAxisNum > 1:
-        the_label = ['', '', '', '']
+        the_label = ['', '']
         counter = 0
+        display = ''
         for i in slct_find:
             for x in aggoptions:
                 if i == 'population_below_poverty':
@@ -1158,8 +1155,18 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
 
             for x in options:
                 if x['value'] == i:
-                    the_label[counter] = the_label0 + ' ' + x['label']
+                    if slct_find:
+                        if counter == 0:
+                            display = x['label'] + ' & '
+                        else:
+                            display =  x['label']
+                    if counter==0:
+                        the_label[counter] = the_label0 + ' ' + display
+                    else:
+                        the_label[counter] = display
                     counter = counter + 1
+            print('|||||||||||||||||||||||||||||||||')
+            print(' '.join(the_label))
 
     temp_x_label = ['']
     temp_x_label[0] = x_label[0]
@@ -1174,37 +1181,21 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
 
             for x in slct_specificlocation:
                 if x == slct_specificlocation[len(slct_specificlocation) - 1]:
-                    display_specificlocation = display_specificlocation + ' & ' + x
+                    display_specificlocation = display_specificlocation + ' &' + x
                 elif x == slct_specificlocation[len(slct_specificlocation) - 2]:
                     display_specificlocation = display_specificlocation + x
                 else:
                     display_specificlocation = display_specificlocation + x + ', '
 
-        vistitle = the_label[0] + ' in ' + display_specificlocation
+        vistitle = ' '.join(the_label) + ' in ' + display_specificlocation
     else:
         if x_label[0][-1] == 'y':
             temp_x_label[0] = x_label[0][:-1]
             end = 'ies'
         else:
             end = 's'
-        vistitle = the_label[0] + ' in All ' + temp_x_label[0] + end
-    if slct_specificfind:
-        display_specificfind = slct_specificfind[0]
-        if len(slct_specificfind) > 1:
-            display_specificfind = ''
+        vistitle = ' '.join(the_label) + ' in All ' + temp_x_label[0] + end
 
-            for x in slct_specificfind:
-                if x == slct_specificfind[len(slct_specificfind) - 1]:
-                    display_specificfind = display_specificfind + ' & ' + x
-                elif x == slct_specificfind[len(slct_specificfind) - 2]:
-                    display_specificfind = display_specificfind + x
-                else:
-                    display_specificfind = display_specificfind + x + ', '
-
-    if slct_specificfind and slct_specificlocation:
-        vistitle = the_label[0] + ' by ' + display_specificfind + ' in ' + display_specificlocation
-    elif slct_specificfind:
-        vistitle = the_label[0] + ' by ' + display_specificfind + ' in All ' + temp_x_label[0] + end
 
     if slct_country and slct_scope:
         if scope_label[0][-1] == 'y':
@@ -1225,8 +1216,7 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
                 else:
                     displayCountry = displayCountry + x + ', '
 
-        vistitle = 'Recommendation Number ' + str(slct_nrecom) + ': ' + the_label[0] + ' in ' + x_label[
-            0] + ' by ' + displayCountry
+
 
     fig = {}
     bar_chart = {}
@@ -1237,14 +1227,12 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
             slct_location = maxList_x_y_z[i][0]
             slct_find = maxList_x_y_z[i][1]
             slct_aggregation = maxList_x_y_z[i][2]
-            slct_specificfind_nominal = slct_scope
-            slct_specificfind = slct_country[0]
 
             x_label = [x['label'] for x in slct_location_options if x['value'] == slct_location][0]
             y_label = [x['label'] for x in allOptions if x['value'] == slct_find][0]
             for x in aggoptions:
                 if x['value'] == slct_aggregation:
-                    the_label0 = x['label'] + ' '+y_label
+                    the_label0 = x['label'] + ' ' + y_label
 
             vistitle_mix = 'Recommendation Number ' + str(i + 1) + ': ' + the_label0 + ' in ' + \
                            x_label + ' by ' + displayCountry + ' VS. All ' + temp_scope_label[0] + end
