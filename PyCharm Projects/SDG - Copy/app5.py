@@ -50,22 +50,22 @@ mask = (df.country != 'None')
 filtered_data = df.loc[mask, :]
 
 # genders row
-for i in range(len(df.borrower_genders)):
-    final_gender = ''
-    list_of_gender = df['borrower_genders'][i]
-    if type(list_of_gender) != str:
-        final_gender = 'Not answered'
-    else:
-        unique = len(pd.unique((list_of_gender.split(', '))))
-        if unique == 2:
-            final_gender = 'Both'
-        elif unique == 1:
-            if list_of_gender[0] == 'f':
-                final_gender = 'Female'
-            else:
-                final_gender = 'Male'
-
-    df.at[i, 'borrower_genders'] = final_gender
+# for i in range(len(df.borrower_genders)):
+#     final_gender = ''
+#     list_of_gender = df['borrower_genders'][i]
+#     if type(list_of_gender) != str:
+#         final_gender = 'Not answered'
+#     else:
+#         unique = len(pd.unique((list_of_gender.split(', '))))
+#         if unique == 2:
+#             final_gender = 'Both'
+#         elif unique == 1:
+#             if list_of_gender[0] == 'f':
+#                 final_gender = 'Female'
+#             else:
+#                 final_gender = 'Male'
+#
+#     df.at[i, 'borrower_genders'] = final_gender
 
 nominalOptions = ['sector', 'activity', 'repayment_interval', 'borrower_genders']
 numericalOptions = ['loan_amount', 'lender_count', 'funded_amount', 'term_in_months']
@@ -115,9 +115,11 @@ app.layout = html.Div(
                     # 'margin-top': '90px',
                     # 'verticalAlign': 'middle'},
                     children=[
-                        html.Button('All', id='display_all', className='button'),
+                        html.Button('Map & Bar', id='display_all', className='button'),
                         html.Button('Map', id='display_map', className='button'),
                         html.Button('Bar', id='display_bar', className='button'),
+                        html.Button('Cloud', id='display_cloud', className='button'),
+
                     ],
                 ),
             ],
@@ -400,6 +402,80 @@ app.layout = html.Div(
                     id='rec4_bar_div',
                     children=dcc.Graph(id='rec4_bar', figure={}, ),
                     className='card',
+                ),
+                html.Div(
+                    id='sources_id',
+                    children=[
+                        html.H2("Sources",
+                                style={'text-align': 'center', 'color': 'grey', 'fontSize': 18,
+                                       'marginBottom': '15px',
+                                       'marginLeft': '5px'}),
+
+                        html.Div(
+                            children=[
+                                html.Div(
+                                    children=[
+                                        html.H2(children="Dataset 1", className="menu-title2"),
+                                        html.P(children="Dataset 1 description", className="menu-title3"),
+                                        html.Button('Download', id='Download1', className='button2'),
+
+                                    ],
+
+                                ),
+
+
+                            ],
+                            className="dropdown",
+                        ),
+                        html.Div(
+                            children=[
+                                html.Div(
+                                    children=[
+                                        html.H2(children="Dataset 2", className="menu-title2"),
+                                        html.P(children="Dataset 2 description", className="menu-title3"),
+                                        html.Button('Download', id='Download2', className='button2'),
+
+                                    ],
+
+                                ),
+
+                            ],
+                            className="dropdown",
+                        ),
+                        html.Div(
+                            children=[
+                                html.Div(
+                                    children=[
+                                        html.H2(children="Dataset 3", className="menu-title2"),
+                                        html.P(children="Dataset 3 description", className="menu-title3"),
+                                        html.Button('Download', id='Download3', className='button2'),
+
+                                    ],
+
+                                ),
+
+                            ],
+                            className="dropdown",
+                        ),
+                        html.Div(
+                            children=[
+                                html.Div(
+                                    children=[
+                                        html.H2(children="Dataset 4", className="menu-title2"),
+                                        html.P(children="Dataset 4 description", className="menu-title3"),
+                                        html.Button('Download', id='Download4', className='button2'),
+
+                                    ],
+
+                                ),
+
+                            ],
+                            className="dropdown",
+                        ),
+
+                        # children=dcc.Graph(id='sources', figure={}, ),
+                    ],
+                    className='menu2',
                 ),
 
             ],
@@ -1163,7 +1239,7 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
                     if counter == 0:
                         the_label[counter] = the_label0 + ' ' + display
                     else:
-                        the_label[counter] = the_label0 + ' '+ display
+                        the_label[counter] = the_label0 + ' ' + display
                     counter = counter + 1
             print('|||||||||||||||||||||||||||||||||')
             print(''.join(the_label))
@@ -1326,7 +1402,7 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
             ],
                 layout={
                     'yaxis': {'title': the_label[0][:-2], 'color': '#20A187'},
-                    'yaxis2': {'title': the_label[1],  'color': '#440356', 'overlaying': 'y', 'side': 'right'}
+                    'yaxis2': {'title': the_label[1], 'color': '#440356', 'overlaying': 'y', 'side': 'right'}
                 }
             )
             bar_chart.update_layout(xaxis_title=x_label[0], title=vistitle, title_x=0.5)
