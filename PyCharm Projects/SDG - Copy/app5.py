@@ -1,5 +1,4 @@
 import heapq
-
 import dash
 from dash import dcc, callback_context
 from dash import html
@@ -10,8 +9,34 @@ import dash_daq as daq
 import plotly.graph_objs as go
 from numpy.compat import basestring
 from scipy.spatial import distance
+# from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
+
 
 df = pd.read_csv("kiva_loans.csv")
+df_tweetsOnly = pd.read_csv("Tweets Only.csv")
+# newTweets = []
+# for x in df_tweetsOnly['Text']:
+#     if 'google' in x:
+#         print('here')
+#         newTweets.append(x)
+#
+# #custom_mask = np.array(Image.open('../input/twitterpic/Twitter-PNG-Image.png'))
+#
+#
+#
+# wc = WordCloud(background_color="white",
+#                    # stopwords=stopwords,
+#                    #mask = custom_mask,
+#                   )
+# wc.generate(newTweets)
+# image_colors = ImageColorGenerator(custom_mask)
+# wc.recolor(color_func = image_colors)
+#
+# plt.imshow(wc, interpolation='bilinear')
+# plt.axis("off")
+# plt.show()
+# print(newTweets)
+
 df["Date"] = pd.to_datetime(df["posted_time"], format="%Y-%m-%d")
 df.sort_values("Date", inplace=True)
 df['Year'] = df['Date'].dt.year
@@ -50,22 +75,22 @@ mask = (df.country != 'None')
 filtered_data = df.loc[mask, :]
 
 # genders row
-# for i in range(len(df.borrower_genders)):
-#     final_gender = ''
-#     list_of_gender = df['borrower_genders'][i]
-#     if type(list_of_gender) != str:
-#         final_gender = 'Not answered'
-#     else:
-#         unique = len(pd.unique((list_of_gender.split(', '))))
-#         if unique == 2:
-#             final_gender = 'Both'
-#         elif unique == 1:
-#             if list_of_gender[0] == 'f':
-#                 final_gender = 'Female'
-#             else:
-#                 final_gender = 'Male'
-#
-#     df.at[i, 'borrower_genders'] = final_gender
+for i in range(len(df.borrower_genders)):
+    final_gender = ''
+    list_of_gender = df['borrower_genders'][i]
+    if type(list_of_gender) != str:
+        final_gender = 'Not answered'
+    else:
+        unique = len(pd.unique((list_of_gender.split(', '))))
+        if unique == 2:
+            final_gender = 'Both'
+        elif unique == 1:
+            if list_of_gender[0] == 'f':
+                final_gender = 'Female'
+            else:
+                final_gender = 'Male'
+
+    df.at[i, 'borrower_genders'] = final_gender
 
 nominalOptions = ['sector', 'activity', 'repayment_interval', 'borrower_genders']
 numericalOptions = ['loan_amount', 'lender_count', 'funded_amount', 'term_in_months']
@@ -94,7 +119,7 @@ external_stylesheets = [
 ]
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-app.title = "Poverty Tracker"
+app.title = "Poverty Lens"
 
 # App layout
 app.layout = html.Div(
@@ -103,7 +128,7 @@ app.layout = html.Div(
         html.Div(
             children=[
                 html.H1(
-                    children="Poverty Tracker", className="header-title"
+                    children="Poverty Lens", className="header-title"
                 ),
                 html.P(
                     children="Visual Analytics for Monitoring SDG Poverty Indicators",
@@ -932,6 +957,8 @@ def update_graph(slct_location, slct_find, slct_specificlocation, slct_sorting, 
 
         if slct_scope in nominalOptions:
             nominalOptions.remove(slct_scope)
+        if slct_scope == 'sector':
+            nominalOptions.remove('activity')
 
         countryData = (df[(df[slct_scope].isin(slct_country))])
         allData = df
